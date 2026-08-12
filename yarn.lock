@@ -190,7 +190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-connection@npm:^0.0.1-rc.1, @deepseek-ai/dsh-client-connection@npm:^0.0.1-rc.2":
+"@deepseek-ai/dsh-client-connection@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-client-connection@npm:0.0.1-rc.2"
   dependencies:
@@ -210,7 +210,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-locale@npm:^0.0.1-rc.1":
+"@deepseek-ai/dsh-client-locale@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-client-locale@npm:0.0.1-rc.2"
   dependencies:
@@ -230,7 +230,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-runtime@npm:^0.0.1-rc.1":
+"@deepseek-ai/dsh-client-runtime@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-client-runtime@npm:0.0.1-rc.2"
   dependencies:
@@ -259,7 +259,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-ui-primitives@npm:^0.0.1-rc.1":
+"@deepseek-ai/dsh-client-ui-primitives@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-client-ui-primitives@npm:0.0.1-rc.2"
   dependencies:
@@ -290,7 +290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-ui-settings@npm:^0.0.1-rc.1":
+"@deepseek-ai/dsh-client-ui-settings@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-client-ui-settings@npm:0.0.1-rc.2"
   peerDependencies:
@@ -308,7 +308,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-ui-slots@npm:^0.0.1-rc.1, @deepseek-ai/dsh-client-ui-slots@npm:^0.0.1-rc.2":
+"@deepseek-ai/dsh-client-ui-slots@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-client-ui-slots@npm:0.0.1-rc.2"
   peerDependencies:
@@ -318,7 +318,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-web-react@npm:^0.0.1-rc.1":
+"@deepseek-ai/dsh-client-web-react@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-client-web-react@npm:0.0.1-rc.2"
   dependencies:
@@ -427,7 +427,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-invariants@npm:^0.0.1-rc.1":
+"@deepseek-ai/dsh-invariants@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-invariants@npm:0.0.1-rc.2"
   dependencies:
@@ -572,7 +572,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-settings@npm:^0.0.1-rc.1, @deepseek-ai/dsh-settings@npm:^0.0.1-rc.2":
+"@deepseek-ai/dsh-settings@npm:^0.0.1-rc.2":
   version: 0.0.1-rc.2
   resolution: "@deepseek-ai/dsh-settings@npm:0.0.1-rc.2"
   peerDependencies:
@@ -1657,15 +1657,15 @@ __metadata:
   resolution: "dsh-session-notification@workspace:."
   dependencies:
     "@deepseek-ai/cordis": "npm:^4.0.1-rc.1"
-    "@deepseek-ai/dsh-client-connection": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-client-locale": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-client-runtime": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-client-ui-primitives": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-client-ui-settings": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-client-ui-slots": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-client-web-react": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-invariants": "npm:^0.0.1-rc.1"
-    "@deepseek-ai/dsh-settings": "npm:^0.0.1-rc.1"
+    "@deepseek-ai/dsh-client-connection": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-client-locale": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-client-runtime": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-client-ui-primitives": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-client-ui-settings": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-client-ui-slots": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-client-web-react": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-invariants": "npm:^0.0.1-rc.2"
+    "@deepseek-ai/dsh-settings": "npm:^0.0.1-rc.2"
     "@deepseek-ai/schemastery": "npm:^3.18.1-rc.1"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/react": "npm:^16.1.0"
