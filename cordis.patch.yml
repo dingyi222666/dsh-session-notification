@@ -1,0 +1,8 @@
+# The dsh-session-notification bundle patch: one plugin row added to the host
+# composition. Applied after the web-app bundle's patch layer; the row joins
+# the Loader entry list, so the node half registers the `dsh-session-notification`
+# settings namespace, and the modules node half serves lib/client.js into the
+# boot graph (the 通知 / Notifications settings section).
+- insert:
+    - id: dsh-session-notification
+      name: 'dsh-session-notification'

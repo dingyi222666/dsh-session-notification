@@ -1,0 +1,103 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@deepseek-ai/dsh-agent": [
+        "../test-dingyi222666/packages/core/agent/lib/types"
+      ],
+      "@deepseek-ai/dsh-api-remotes/client": [
+        "../test-dingyi222666/packages/api/remotes/lib/types/client"
+      ],
+      "@deepseek-ai/dsh-commands": [
+        "../test-dingyi222666/packages/interaction/commands/lib/types"
+      ],
+      "@deepseek-ai/dsh-client-connection": [
+        "../test-dingyi222666/packages/client/connection/lib/types"
+      ],
+      "@deepseek-ai/dsh-client-connection/client": [
+        "../test-dingyi222666/packages/client/connection/lib/types/client"
+      ],
+      "@deepseek-ai/dsh-client-locale/client": [
+        "../test-dingyi222666/packages/client/locale/lib/types/client"
+      ],
+      "@deepseek-ai/dsh-client-locale/src/*": [
+        "../test-dingyi222666/packages/client/locale/src/*"
+      ],
+      "@deepseek-ai/dsh-client-runtime/client": [
+        "../test-dingyi222666/packages/client/runtime/lib/types/client"
+      ],
+      "@deepseek-ai/dsh-client-test-runtime": [
+        "../test-dingyi222666/packages/client/test-runtime/lib/types"
+      ],
+      "@deepseek-ai/dsh-client-ui-conversation/client": [
+        "../test-dingyi222666/packages/client/ui-conversation/lib/types/client"
+      ],
+      "@deepseek-ai/dsh-client-ui-primitives": [
+        "../test-dingyi222666/packages/client/ui-primitives/lib/types"
+      ],
+      "@deepseek-ai/dsh-client-ui-settings/client": [
+        "../test-dingyi222666/packages/client/ui-settings/lib/types/client"
+      ],
+      "@deepseek-ai/dsh-client-ui-slots": [
+        "../test-dingyi222666/packages/client/ui-slots/lib/types"
+      ],
+      "@deepseek-ai/dsh-client-web-react": [
+        "../test-dingyi222666/packages/client/web-react/lib/types"
+      ],
+      "@deepseek-ai/dsh-invariants": [
+        "../test-dingyi222666/packages/support/invariants/lib/types"
+      ],
+      "@deepseek-ai/dsh-host-apiproxy/api": [
+        "../test-dingyi222666/packages/host/apiproxy/lib/types/api"
+      ],
+      "@deepseek-ai/dsh-llm": [
+        "../test-dingyi222666/packages/llm/llm/lib/types"
+      ],
+      "@deepseek-ai/schemastery": [
+        "../test-dingyi222666/vendor/schemastery/lib/types"
+      ],
+      "@deepseek-ai/dsh-session": [
+        "../test-dingyi222666/packages/core/session/lib/types"
+      ],
+      "@deepseek-ai/dsh-settings": [
+        "../test-dingyi222666/packages/settings/settings/lib/types"
+      ],
+      "@deepseek-ai/dsh-subagent": [
+        "../test-dingyi222666/packages/subagent/subagent/lib/types"
+      ],
+      "@deepseek-ai/dsh-tasks": [
+        "../test-dingyi222666/packages/tasks/tasks/lib/types"
+      ],
+      "@deepseek-ai/dsh-tools": [
+        "../test-dingyi222666/packages/core/tools/lib/types"
+      ],
+      "@deepseek-ai/cordis": [
+        "../test-dingyi222666/vendor/cordis/lib/types"
+      ],
+      "cordis": [
+        "../test-dingyi222666/vendor/cordis/lib/types"
+      ]
+    },
+    "ignoreDeprecations": "6.0",
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src",
+    "tests"
+  ]
+}
