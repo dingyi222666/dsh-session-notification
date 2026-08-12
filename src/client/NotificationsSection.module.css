@@ -12,13 +12,23 @@
   color: var(--dsw-alias-label-primary);
 }
 
-/* Agent-presets title idiom: plain 18/600 heading, no icon. */
+/* Section-title idiom: 18/600 heading with the plugin's own bell glyph. The
+ * settings shell maps only its own section ids to nav icons, so the bell
+ * lives here, in the section the plugin renders itself. */
 .title {
   margin: 0;
   font-size: 18px;
   line-height: 28px;
   font-weight: 600;
   color: var(--dsw-alias-label-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titleIcon {
+  flex: none;
+  color: var(--dsw-alias-label-secondary);
 }
 
 .intro {

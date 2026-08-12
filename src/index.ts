@@ -1,8 +1,10 @@
 /**
- * Host loader entry for the browser notification plugin. The Host half owns
- * one contribution: the durable `dsh-session-notification` settings namespace, so
- * the browser settings section reads and writes through the user-settings
- * document instead of a browser-local store.
+ * Host loader entry for the browser notification plugin. The Host half
+ * reserves the `dsh-session-notification` settings namespace through the
+ * settings seam (the plugin's own layer), keeping the name owned host-side
+ * for forward compatibility. The browser half persists its preferences
+ * browser-locally (localStorage), so the plugin needs no host namespace
+ * exposure to work.
  */
 import type { Context } from '@deepseek-ai/cordis'
 // Value import: the settings namespace brand. The module's Context merge

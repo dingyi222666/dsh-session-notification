@@ -6,7 +6,7 @@ A notification plugin for the dsh web GUI. When a session finishes, hits an erro
 
 ## Screenshots
 
-The settings panel with the **通知 / Notifications** entry in the sidebar (bell icon) and the section content:
+The settings panel with the **通知 / Notifications** entry in the sidebar and the section content (the plugin's own bell glyph heads the section):
 
 ![The Notifications settings section](screenshots/01-notifications-section.png)
 
@@ -43,7 +43,7 @@ The plugin registers a **通知 / Notifications** section in the settings panel 
 - **音量** slider,
 - one row per notification kind: enable switch, custom-audio upload, sound picker (the official dropdown menu), and a 试听 / preview button.
 
-Preferences are stored in the Host user-settings document under the `dsh-session-notification` namespace — the same settings seam official plugins use — so they persist across sessions and sync across tabs.
+Preferences are stored **browser-locally** (localStorage) under the `dsh-session-notification` key — no host settings-namespace exposure required — so they persist across sessions and sync across tabs, and never depend on a harness change.
 
 ## How it works
 
@@ -64,11 +64,11 @@ dsh plugin --profile web add /Users/dingyi/projects/dsh/dsh-session-notification
 dsh web
 ```
 
-One-time notes:
+Everything lives in this plugin — no harness (host) changes:
 
-- The web client can only reach settings namespaces explicitly exposed by the host (`packages/host/apiproxy/src/api-proxy.ts`, `WEB_SETTINGS_NAMESPACES`); `dsh-session-notification` was added there. The plugin's node half registers the namespace through the settings service, exactly like `ui-theme` does.
-- A notification bell (`IconBellOutline16`) was added to the official icon set and wired into the settings nav (`ui-settings-general`), so the 通知 section shows a bell instead of the default gear — this appears after the harness client bundle is rebuilt.
-- The `notifyCurrent` preference is a schema field: it needs a `dsh web` restart to persist (it still works with its default until then).
+- The settings section is registered through the client slot system (`settings.section`), exactly like official sections.
+- Preferences persist in the browser (localStorage) and sync across tabs; nothing requires the host's `WEB_SETTINGS_NAMESPACES` or any other host-package change. (The node half still reserves the `dsh-session-notification` namespace host-side through the settings seam; that reservation is inert without exposure.)
+- The bell glyph ships with the plugin (section header + browser Notification icon); the settings shell maps only its own section ids to nav icons, so the 通知 nav row shows the shell's default gear.
 
 ## Development
 

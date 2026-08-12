@@ -6,7 +6,7 @@
 
 ## 截图
 
-设置面板——侧边栏里的「**通知**」入口（铃铛图标）与栏目内容：
+设置面板——侧边栏里的「**通知**」入口与栏目内容（铃铛图标是插件自己的，位于栏目标题处）：
 
 ![通知设置栏目](screenshots/01-notifications-section.png)
 
@@ -43,7 +43,7 @@
 - **音量**滑块，
 - 每种通知类型一行：启用开关、自定义音频上传、音效选择（官方下拉菜单）、以及「试听」按钮。
 
-偏好保存在宿主用户设置文档的 `dsh-session-notification` 命名空间下——与官方插件的设置机制一致——跨会话持久化、跨标签页同步。
+偏好保存在**浏览器本地**（localStorage）的 `dsh-session-notification` 键下——无需宿主放行任何设置命名空间——跨会话持久化、跨标签页同步，完全不依赖宿主改动。
 
 ## 工作原理
 
@@ -64,11 +64,11 @@ dsh plugin --profile web add /Users/dingyi/projects/dsh/dsh-session-notification
 dsh web
 ```
 
-一次性说明：
+一切都在插件自身实现——不依赖 harness（宿主）的任何改动：
 
-- Web 客户端只能读写宿主显式放行的设置命名空间（`packages/host/apiproxy/src/api-proxy.ts` 的 `WEB_SETTINGS_NAMESPACES`）；`dsh-session-notification` 已加入该列表。插件 Node 半区通过 settings 服务注册命名空间，做法与 `ui-theme` 一致。
-- 官方图标集新增了通知铃铛（`IconBellOutline16`），并接入设置导航（`ui-settings-general`），让「通知」栏目在导航里显示铃铛而不是默认齿轮——重建 harness 客户端后可见。
-- `notifyCurrent` 是 schema 字段：需要重启 `dsh web` 才能持久化（在此之前按默认值工作）。
+- 设置栏目通过客户端 slot 系统（`settings.section`）注册，与官方栏目做法一致。
+- 偏好存在浏览器本地（localStorage）并跨标签页同步；不需要宿主的 `WEB_SETTINGS_NAMESPACES` 或任何其他宿主包改动。（Node 半区仍通过 settings 服务在宿主侧保留 `dsh-session-notification` 命名空间，未放行时它只是占位、无副作用。）
+- 铃铛图标由插件自带（栏目标题 + 浏览器通知图标）；设置外壳只给它自己认识的栏目 id 配导航图标，所以「通知」导航行显示的是外壳默认的齿轮。
 
 ## 开发
 

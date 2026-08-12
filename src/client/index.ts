@@ -12,15 +12,24 @@
  * second instance. The scope is the source of truth for reads (dispatcher,
  * engine) and writes; the bound actions mirror scope snapshots into the
  * renderer's store.
+ *
+ * Preferences are browser-local (localStorage, `createLocalSettingsScope`):
+ * the plugin owns its namespace end to end and needs no host-side settings
+ * exposure, so it runs against a pristine harness without touching
+ * `packages/host/apiproxy` or any other host package.
  */
 import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
-// Type-only: the settings-scope Context merge (ctx.settingsScope).
+// Type-only: the settings surface's slot-name augmentation, which types the
+// `settings.section` seat this plugin registers (a side effect of importing
+// the face is the ctx.settingsScope Context merge, which the plugin no
+// longer uses — preferences are browser-local).
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 // Type-only: the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { NotificationSettings, NotificationType, SoundId } from '../settings.ts'
-import { DEFAULT_NOTIFICATION_SETTINGS, NOTIFICATIONS_NS } from '../settings.ts'
+import { DEFAULT_NOTIFICATION_SETTINGS } from '../settings.ts'
+import { createLocalSettingsScope } from './local-settings.ts'
 import { SoundPlayer } from './sounds.ts'
 import { browserPermission, requestBrowserPermission, showBrowserNotification } from './browser-notify.ts'
 import { MAX_CUSTOM_AUDIO_BYTES, readCustomSound, readFileAsDataUrl, writeCustomSound } from './custom-audio.ts'
@@ -46,19 +55,18 @@ const NS = 'notifications'
 /** How long a finished run waits for trailing wire frames before classification. */
 const SETTLE_MS = 250
 
-/** Required services: the slot registry, dictionaries, the session list, the
- *  settings scope transport, and the remote invalidation the scope binds. */
-export const inject = ['slots', 'locale', 'sessions', 'connection', 'remote', 'settingsScope']
+/** Required services: the slot registry, dictionaries, and the session list. */
+export const inject = ['slots', 'locale', 'sessions']
 
 /**
- * Client plugin body: bind the settings scope, register the Notifications
- * section, and watch the sessions list for notification events.
+ * Client plugin body: bind the browser-local preferences scope, register the
+ * Notifications section, and watch the sessions list for notification events.
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-session-notification: dictionaries')
 
-  const scope = ctx.settingsScope.bind<NotificationSettings>({ namespace: NOTIFICATIONS_NS })
+  const scope = createLocalSettingsScope()
   const store = createNotificationsStore()
   let bound: BoundActions<typeof store> | undefined
 

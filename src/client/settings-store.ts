@@ -1,10 +1,10 @@
 /**
- * Notifications settings section store: a mirror of the `dsh-session-notification`
- * settings scope, plus the write actions the section's inject face exposes.
- * The slot renderer owns the store instance and hands its bound actions to
- * the inject factory (the ui-theme row pattern); the apply world syncs
- * accepted scope snapshots through those actions. Component reads go through
- * `useStore`.
+ * Notifications settings section store: a mirror of the plugin's
+ * browser-local preferences scope, plus the write actions the section's
+ * inject face exposes. The slot renderer owns the store instance and hands
+ * its bound actions to the inject factory (the ui-theme row pattern); the
+ * apply world syncs accepted scope snapshots through those actions. Component
+ * reads go through `useStore`.
  */
 import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client'
 import type { SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
@@ -17,11 +17,11 @@ import { readCustomSounds, withCustomSound, type CustomSounds } from './custom-a
 
 export type { BrowserPermission } from './browser-notify.ts'
 
-/** Store state mirrored from the settings scope. */
+/** Store state mirrored from the preferences scope. */
 export interface NotificationsState {
-  /** Scope readiness (`unavailable` = namespace not exposed — defaults apply). */
+  /** Scope readiness (`unavailable` = no accepted snapshot — defaults apply). */
   status: 'loading' | 'ready' | 'unavailable'
-  /** Whether the Host document accepts writes. */
+  /** Whether the preferences accept writes. */
   writable: boolean
   /** Current durable preferences. */
   settings: NotificationSettings

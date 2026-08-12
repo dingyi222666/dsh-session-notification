@@ -17,6 +17,7 @@ import {
   IconAgentPresetOutline16, IconCheckOutline16, IconChevronDownOutline14,
   IconQuestionOutline14, IconWarningOutline16, Menu,
 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconBell16 } from './icons.tsx'
 import type { NotificationsKey } from './locales.ts'
 import { SOUND_IDS } from '../settings.ts'
 import type {
@@ -189,7 +190,10 @@ export function NotificationsSection({
 
   return (
     <div className={css.section}>
-      <h3 className={css.title}>{t('section.title')}</h3>
+      <h3 className={css.title}>
+        <IconBell16 className={css.titleIcon} aria-hidden="true" />
+        {t('section.title')}
+      </h3>
       <p className={css.intro}>{t('section.intro')}</p>
 
       <ul className={css.rows}>

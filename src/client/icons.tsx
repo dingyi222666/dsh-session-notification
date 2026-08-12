@@ -1,18 +1,20 @@
 /**
- * Notification bell glyph. The official icon set has no bell, so the plugin
- * ships its own in the same style (16px viewBox, `fill="currentColor"`,
- * `{size, className}` props) — the identical path is added to the official
- * ui-primitives set for the settings nav once the harness client rebuilds.
+ * Notification bell glyph, owned entirely by this plugin. The official icon
+ * set has no bell, and the settings shell maps only its own section ids to
+ * nav icons (unknown ids fall back to the gear), so the plugin ships its own
+ * bell: it heads the Notifications settings section and doubles as the
+ * browser Notification icon. No host icon-set or settings-nav changes are
+ * involved.
  */
 import type { IconProps } from '@deepseek-ai/dsh-client-ui-primitives'
 
 export type { IconProps } from '@deepseek-ai/dsh-client-ui-primitives'
 
-/** The bell body path (shared with the ui-primitives addition). */
+/** The bell body path (16px viewBox, fill idiom). */
 export const BELL_BODY_PATH =
   'M8 2C5.79 2 4 3.79 4 6V8.59L2.7 9.88C2.52 10.06 2.65 10.36 2.9 10.36H13.1C13.35 10.36 13.48 10.06 13.3 9.88L12 8.59V6C12 3.79 10.21 2 8 2Z'
 
-/** The bell clapper path (shared with the ui-primitives addition). */
+/** The bell clapper path (16px viewBox, fill idiom). */
 export const BELL_CLAPPER_PATH =
   'M6.6 12.1C6.83 12.79 7.37 13.1 8 13.1C8.63 13.1 9.17 12.79 9.4 12.1H6.6Z'
 
