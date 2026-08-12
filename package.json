@@ -46,7 +46,7 @@
     "platform": "web"
   },
   "scripts": {
-    "prepare": "npm run build",
+    "prepare": "pnpm run build",
     "build": "tsc -p tsconfig.build.json && tsdown",
     "bundle": "tsdown",
     "watch": "tsdown --watch",
