@@ -6,7 +6,7 @@ A notification plugin for the dsh web GUI. When a session finishes, hits an erro
 
 ## Screenshots
 
-The settings panel with the **通知 / Notifications** entry in the sidebar and the section content (the plugin's own bell glyph heads the section):
+The settings panel with the **通知 / Notifications** entry in the sidebar and the section content:
 
 ![The Notifications settings section](screenshots/01-notifications-section.png)
 
@@ -68,7 +68,7 @@ Everything lives in this plugin — no harness (host) changes:
 
 - The settings section is registered through the client slot system (`settings.section`), exactly like official sections.
 - Preferences persist in the browser (localStorage) and sync across tabs; nothing requires the host's `WEB_SETTINGS_NAMESPACES` or any other host-package change. (The node half still reserves the `dsh-session-notification` namespace host-side through the settings seam; that reservation is inert without exposure.)
-- The bell glyph ships with the plugin (section header + browser Notification icon); the settings shell maps only its own section ids to nav icons, so the 通知 nav row shows the shell's default gear.
+- The settings shell maps only its own section ids to nav icons, so the 通知 nav row shows the shell's default gear.
 
 ## Development
 

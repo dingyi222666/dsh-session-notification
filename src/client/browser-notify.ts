@@ -2,7 +2,6 @@
  * Browser `Notification` API wrapper. Every call is guarded so non-browser
  * or permission-less environments degrade to a no-op instead of throwing.
  */
-import { BELL_ICON_DATA_URL } from './icons.tsx'
 
 /** Notification permission state, with `unsupported` for non-browser runs. */
 export type BrowserPermission = 'granted' | 'denied' | 'default' | 'unsupported'
@@ -37,7 +36,7 @@ export async function requestBrowserPermission(): Promise<BrowserPermission> {
 export function showBrowserNotification(title: string, body: string): boolean {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false
   try {
-    const notification = new Notification(title, { body, tag: 'dsh-session-notification', icon: BELL_ICON_DATA_URL })
+    const notification = new Notification(title, { body, tag: 'dsh-session-notification' })
     notification.onclick = () => {
       window.focus()
       notification.close()
