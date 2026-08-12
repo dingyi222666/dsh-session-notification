@@ -46,11 +46,13 @@
     "platform": "web"
   },
   "scripts": {
+    "prepare": "npm run build",
+    "build": "tsc -p tsconfig.build.json && tsdown",
     "bundle": "tsdown",
     "watch": "tsdown --watch",
-    "build": "tsc -p tsconfig.build.json && tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clean": "rm -rf lib"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.1-rc.1",
