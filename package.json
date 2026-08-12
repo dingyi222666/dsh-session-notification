@@ -46,7 +46,7 @@
     "platform": "web"
   },
   "scripts": {
-    "prepare": "pnpm run build",
+    "prepare": "yarn run build",
     "build": "tsc -p tsconfig.build.json && tsdown",
     "bundle": "tsdown",
     "watch": "tsdown --watch",
@@ -66,6 +66,7 @@
     "@deepseek-ai/dsh-invariants": "^0.0.1-rc.1",
     "@deepseek-ai/dsh-settings": "^0.0.1-rc.1",
     "@deepseek-ai/schemastery": "^3.18.1-rc.1",
+    "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^24.0.0",
     "@types/react": "~18.3.1",

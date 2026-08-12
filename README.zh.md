@@ -72,10 +72,10 @@ dsh web
 
 ## 开发
 
-- `pnpm run build` —— 构建浏览器包（`lib/client.js`）与 Node 半区（`lib/index.js` / `lib/invariant.js`）。
+- `yarn run build` —— 构建浏览器包（`lib/client.js`）与 Node 半区（`lib/index.js` / `lib/invariant.js`）。
 - `src/client/notification-service.ts` —— 引擎（事件判定）与分发器（开关/音效/通知门控）；`src/client/settings-store.ts` —— 设置栏桥接；`src/client/NotificationsSection.tsx` —— 设置栏 UI；`src/client/sounds.ts` 与 `src/client/custom-audio.ts` —— 内置与自定义音效。
-- `pnpm exec vitest run tests/` —— 行为测试；`pnpm exec tsc --noEmit` —— 类型门禁。
-- Node 半区改动需要重启 `dsh web`；浏览器包改动重新 `pnpm run build` 即可（`--dev` 模式会自动热更新）。
+- `yarn test` —— 行为测试；`yarn run typecheck` —— 类型门禁。
+- Node 半区改动需要重启 `dsh web`；浏览器包改动重新 `yarn run build` 即可（`--dev` 模式会自动热更新）。
 
 ## 已知限制
 

@@ -72,10 +72,10 @@ One-time notes:
 
 ## Development
 
-- `pnpm run build` — builds the browser bundle (`lib/client.js`) and the Node half (`lib/index.js` / `lib/invariant.js`).
+- `yarn run build` — builds the browser bundle (`lib/client.js`) and the Node half (`lib/index.js` / `lib/invariant.js`).
 - `src/client/notification-service.ts` — the engine (classification) and dispatcher (gating); `src/client/settings-store.ts` — the settings section bridge; `src/client/NotificationsSection.tsx` — the section UI; `src/client/sounds.ts` + `src/client/custom-audio.ts` — the built-in and custom sounds.
-- `pnpm exec vitest run tests/` — behavior tests; `pnpm exec tsc --noEmit` — type gate.
-- Node-half changes need a `dsh web` restart; browser-bundle changes need a rebuild (`pnpm run build`) — a `--dev` server hot-reloads them.
+- `yarn test` — behavior tests; `yarn run typecheck` — type gate.
+- Node-half changes need a `dsh web` restart; browser-bundle changes need a rebuild (`yarn run build`) — a `--dev` server hot-reloads them.
 
 ## Known limitations
 
