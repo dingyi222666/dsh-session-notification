@@ -27,11 +27,28 @@ export async function requestBrowserPermission(): Promise<BrowserPermission> {
 }
 
 /**
- * Show one system notification. Notifications are tagged so a burst of the
- * same event collapses into a single OS-level card. Suppressed notifications
- * log the reason (missing API, missing permission, constructor failure) so a
- * silent "no notification" is diagnosable from the console instead of being
- * swallowed.
+ * Resolve the current page's own icon (favicon) as an absolute URL, preferring
+ * the largest declared one (`apple-touch-icon` over `rel=icon`). `link.href`
+ * is the resolved absolute URL, so relative favicon paths need no base work.
+ * @returns the icon URL, or undefined when the page declares none.
+ */
+function pageIconUrl(): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const appleTouch = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
+  if (appleTouch !== null && appleTouch.href.length > 0) return appleTouch.href
+  const icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
+  if (icon !== null && icon.href.length > 0) return icon.href
+  return undefined
+}
+
+/**
+ * Show one system notification, carrying the page's own icon (favicon).
+ * Notifications are tagged so a burst of the same event collapses into a
+ * single OS-level card. Suppressed notifications log the reason (missing API,
+ * missing permission, constructor failure) so a silent "no notification" is
+ * diagnosable from the console instead of being swallowed; an icon the
+ * browser cannot rasterize falls back to an icon-less notification rather
+ * than dropping the alert.
  * @param title - notification title.
  * @param body - notification body.
  * @returns whether a notification was actually shown.
@@ -45,15 +62,36 @@ export function showBrowserNotification(title: string, body: string): boolean {
     console.warn(`[dsh-session-notification] browser notification suppressed: permission is "${Notification.permission}"`)
     return false
   }
+  const icon = pageIconUrl()
   try {
-    const notification = new Notification(title, { body, tag: 'dsh-session-notification' })
+    const notification = new Notification(title, {
+      body,
+      tag: 'dsh-session-notification',
+      ...(icon === undefined ? {} : { icon }),
+    })
     notification.onclick = () => {
       window.focus()
       notification.close()
     }
     return true
-  } catch (_notificationRejected) {
-    console.warn('[dsh-session-notification] Notification constructor failed; check the browser/OS notification settings', _notificationRejected)
+  } catch (error) {
+    // A page icon the browser cannot rasterize must not kill the alert:
+    // retry once without it, then report.
+    if (icon !== undefined) {
+      try {
+        const notification = new Notification(title, { body, tag: 'dsh-session-notification' })
+        notification.onclick = () => {
+          window.focus()
+          notification.close()
+        }
+        console.warn('[dsh-session-notification] page icon was rejected; notification shown without it', error)
+        return true
+      } catch (_secondFailure) {
+        console.warn('[dsh-session-notification] Notification constructor failed; check the browser/OS notification settings', _secondFailure)
+        return false
+      }
+    }
+    console.warn('[dsh-session-notification] Notification constructor failed; check the browser/OS notification settings', error)
     return false
   }
 }

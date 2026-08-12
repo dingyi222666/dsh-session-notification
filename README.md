@@ -31,7 +31,7 @@ Beyond the four built-in sounds, each kind accepts **your own audio file** (mp3/
 
 ## Browser notifications & the quiet default
 
-Browser (system-level) notifications are **off by default**; turning the switch on asks for the browser's permission first (a user gesture). Once granted, a notification is shown when the event's session is not the one you are reading, or when the tab is in the background. A completed session's notification carries its **final reply text** (the last assistant message). The 测试通知 / Test notification button in the section sends one immediately to verify the channel once permission is granted. The session you are reading stays **quiet by default** — its own events don't interrupt you; flip the 当前会话也提醒 / Alert for the current session toggle if you want it to alert too.
+Browser (system-level) notifications are **off by default**; turning the switch on asks for the browser's permission first (a user gesture). Once granted, a notification is shown when the event's session is not the one you are reading, or when the tab is in the background. Notifications carry the **page's own icon** (the favicon the harness serves). A completed session's notification carries its **final reply text** (the last assistant message). The 测试通知 / Test notification button in the section sends one immediately to verify the channel once permission is granted. The session you are reading stays **quiet by default** — its own events don't interrupt you; flip the 当前会话也提醒 / Alert for the current session toggle if you want it to alert too.
 
 ## The Notifications settings section
 
