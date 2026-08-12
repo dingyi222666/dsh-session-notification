@@ -54,6 +54,14 @@ describe('NotificationDispatcher', () => {
     expect(browser[0].body).toContain('会话 a')
   })
 
+  it('appends the final completion text to a completed notification body', () => {
+    const { deps, browser } = makeDeps()
+    const dispatcher = new NotificationDispatcher(deps)
+    dispatcher.dispatch({ ...event('completed'), detail: '这是最终完成文本。' })
+    expect(browser).toHaveLength(1)
+    expect(browser[0].body).toBe('「会话 a」已完成\n这是最终完成文本。')
+  })
+
   it('skips everything when the kind is disabled', () => {
     const { deps, sounds, browser, settings } = makeDeps()
     const dispatcher = new NotificationDispatcher(deps)

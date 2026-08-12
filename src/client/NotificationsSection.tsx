@@ -42,6 +42,8 @@ export interface NotificationsSectionInjected {
   testSound: (sound: SoundId, customUrl?: string) => void
   /** Request browser notification permission (user gesture). */
   requestPermission: () => Promise<void>
+  /** Show one system notification immediately, to verify the channel. */
+  testBrowserNotification: () => void
   /** Store one kind's custom audio from a picked file. */
   uploadCustomSound: (kind: NotificationType, file: File) => Promise<void>
 }
@@ -179,12 +181,14 @@ function VolumeSlider({ value, label, onChange }: {
  */
 export function NotificationsSection({
   t, useStore, setBrowserEnabled, setNotifyCurrent, setSoundEnabled, setVolume, setType, testSound,
-  requestPermission, uploadCustomSound,
+  requestPermission, testBrowserNotification, uploadCustomSound,
 }: NotificationsSectionProps) {
   const { settings, permission, customSounds } = useStore(state => state)
 
-  // Only the denied state is worth showing: the switch itself carries the
-  // granted/enabled state, while "denied" explains why nothing can fire.
+  // The permission state is shown honestly: denied/unsupported explain why
+  // nothing can fire, and an enabled switch without permission reads as
+  // paused (permission was granted earlier and later revoked, or the
+  // preference predates a permission reset) with a re-grant affordance.
   const deniedLabel = permission === 'denied' ? t('permission.denied') : undefined
 
   return (
@@ -199,11 +203,20 @@ export function NotificationsSection({
             <div className={css.desc}>{t('browser.desc')}</div>
           </div>
           <div className={css.rowActions}>
+            {permission === 'granted' && settings.browserEnabled && (
+              <button type="button" className={css.actionButton} onClick={testBrowserNotification}>
+                {t('test.send')}
+              </button>
+            )}
             {deniedLabel !== undefined && <span className={css.permissionState}>{deniedLabel}</span>}
+            {permission === 'unsupported' && <span className={css.permissionState}>{t('permission.unsupported')}</span>}
             {permission === 'default' && (
               <button type="button" className={css.actionButton} onClick={() => { void requestPermission() }}>
                 {t('permission.request')}
               </button>
+            )}
+            {settings.browserEnabled && permission !== 'granted' && (
+              <span className={css.permissionState}>{t('permission.paused')}</span>
             )}
             <Switch on={settings.browserEnabled} label={t('browser.title')} onChange={(next) => { void setBrowserEnabled(next) }} />
           </div>

@@ -28,13 +28,23 @@ export async function requestBrowserPermission(): Promise<BrowserPermission> {
 
 /**
  * Show one system notification. Notifications are tagged so a burst of the
- * same event collapses into a single OS-level card.
+ * same event collapses into a single OS-level card. Suppressed notifications
+ * log the reason (missing API, missing permission, constructor failure) so a
+ * silent "no notification" is diagnosable from the console instead of being
+ * swallowed.
  * @param title - notification title.
  * @param body - notification body.
  * @returns whether a notification was actually shown.
  */
 export function showBrowserNotification(title: string, body: string): boolean {
-  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false
+  if (typeof Notification === 'undefined') {
+    console.warn('[dsh-session-notification] browser Notification API is unavailable (insecure context or unsupported browser)')
+    return false
+  }
+  if (Notification.permission !== 'granted') {
+    console.warn(`[dsh-session-notification] browser notification suppressed: permission is "${Notification.permission}"`)
+    return false
+  }
   try {
     const notification = new Notification(title, { body, tag: 'dsh-session-notification' })
     notification.onclick = () => {
@@ -43,6 +53,7 @@ export function showBrowserNotification(title: string, body: string): boolean {
     }
     return true
   } catch (_notificationRejected) {
+    console.warn('[dsh-session-notification] Notification constructor failed; check the browser/OS notification settings', _notificationRejected)
     return false
   }
 }

@@ -8,8 +8,8 @@
  */
 import type { SessionId } from '@deepseek-ai/dsh-client-connection/client'
 import type {
-  ConversationSnapshot, PendingInteraction, PendingInteractionStatus, SessionListState,
-  TurnErrorNode,
+  AssistantBlock, ConversationSnapshot, PendingInteraction, PendingInteractionStatus,
+  SessionListState, TurnErrorNode,
 } from '@deepseek-ai/dsh-client-runtime/client'
 import type { NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 
@@ -26,6 +26,8 @@ export interface SessionDetail {
   lastAgentError: string | null
   /** Pending interactions visible in the session snapshot. */
   pending: readonly PendingInteraction[]
+  /** Text of the last assistant message (the final completion text); '' when none. */
+  finalText: string
 }
 
 /** One classified notification event. */
@@ -149,7 +151,7 @@ export class NotificationEngine {
       )
       const message = failed
         ? (detail?.failureMessage ?? detail?.lastAgentError ?? '')
-        : ''
+        : (detail?.finalText ?? '')
       this.ports.emit({
         kind: failed ? 'failed' : 'completed',
         sessionId: id,
@@ -196,18 +198,29 @@ export function approvalText(pending: readonly PendingInteraction[]): string {
 
 /**
  * Project one conversation snapshot into the engine's {@link SessionDetail}.
+ * The final completion text is the joined text of the last assistant step
+ * (the chat view's `assistant-step` node) that carries any.
  * @param snapshot - the session's current conversation snapshot.
  * @returns the derived detail.
  */
 export function sessionDetailOf(snapshot: ConversationSnapshot): SessionDetail {
   let maxTurnErrorSeq = 0
   let failureMessage: string | null = null
+  let finalText = ''
   for (const node of snapshot.chat.nodes.values()) {
-    if (node.kind !== 'turn-error') continue
-    const data = node.data as TurnErrorNode
-    if (data.seq > maxTurnErrorSeq) {
-      maxTurnErrorSeq = data.seq
-      failureMessage = data.message
+    if (node.kind === 'turn-error') {
+      const data = node.data as TurnErrorNode
+      if (data.seq > maxTurnErrorSeq) {
+        maxTurnErrorSeq = data.seq
+        failureMessage = data.message
+      }
+    } else if (node.kind === 'assistant-step') {
+      const data = node.data as { readonly blocks: readonly AssistantBlock[] }
+      const text = data.blocks
+        .filter((block): block is Extract<AssistantBlock, { kind: 'text' }> => block.kind === 'text')
+        .map(block => block.text)
+        .join('')
+      if (text.length > 0) finalText = text
     }
   }
   return {
@@ -215,6 +228,7 @@ export function sessionDetailOf(snapshot: ConversationSnapshot): SessionDetail {
     failureMessage,
     lastAgentError: snapshot.lastAgentError,
     pending: snapshot.pending,
+    finalText,
   }
 }
 
@@ -273,9 +287,15 @@ export class NotificationDispatcher {
     // alerts only when the user opted in.
     if (isCurrent && !hidden && !settings.notifyCurrent) return
     const title = this.deps.t(`notify.${event.kind}.title`)
-    const body = this.deps.t(`notify.${event.kind}.body`)
-      .replaceAll('{title}', event.title)
-      .replaceAll('{detail}', truncateDetail(event.detail))
+    const template = this.deps.t(`notify.${event.kind}.body`)
+    const detail = truncateDetail(event.detail)
+    const base = template.replaceAll('{title}', event.title)
+    // A completed run's detail is the final assistant text — show it on its
+    // own line so long-form content reads naturally; the other kinds embed
+    // the detail inline in their templates.
+    const body = event.kind === 'completed'
+      ? (detail.length > 0 ? `${base}\n${detail}` : base)
+      : base.replaceAll('{detail}', detail)
     if (settings.soundEnabled) {
       // The custom audio plays only when the kind's picker selects 自定义;
       // otherwise the selected built-in plays (a dormant custom file is inert).

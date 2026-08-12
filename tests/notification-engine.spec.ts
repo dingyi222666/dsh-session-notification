@@ -55,7 +55,7 @@ describe('NotificationEngine', () => {
   })
 
   it('raises nothing for pre-existing pending interactions at seed', async () => {
-    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [] }) })
+    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '' }) })
     const engine = new NotificationEngine(ports)
     engine.seed(list({ a: summary('a', false, 'question') }))
     engine.observe(list({ a: summary('a', false, 'question') }))
@@ -64,7 +64,7 @@ describe('NotificationEngine', () => {
   })
 
   it('notifies when a session that was running at seed finishes', async () => {
-    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [] }) })
+    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '' }) })
     const engine = new NotificationEngine(ports)
     engine.seed(list({ a: summary('a', true) }))
     engine.observe(list({ a: summary('a', false) }))
@@ -73,7 +73,7 @@ describe('NotificationEngine', () => {
   })
 
   it('raises completed when a run ends without an error', async () => {
-    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [] }) })
+    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '' }) })
     const engine = new NotificationEngine(ports)
     engine.observe(list({ a: summary('a', true) }))
     engine.observe(list({ a: summary('a', false) }))
@@ -81,14 +81,27 @@ describe('NotificationEngine', () => {
     expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: '' }])
   })
 
-  it('raises failed when a turn-error node appears during the run', async () => {
+  it('carries the final assistant text as the completed detail', async () => {
     const details = new Map<string, SessionDetail>([
-      ['a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [] }],
+      ['a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '最初的回复' }],
     ])
     const ports = makePorts({ detailOf: (id) => details.get(String(id)) })
     const engine = new NotificationEngine(ports)
     engine.observe(list({ a: summary('a', true) }))
-    details.set('a', { maxTurnErrorSeq: 12, failureMessage: 'boom', lastAgentError: null, pending: [] })
+    details.set('a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '最终完成文本' })
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: '最终完成文本' }])
+  })
+
+  it('raises failed when a turn-error node appears during the run', async () => {
+    const details = new Map<string, SessionDetail>([
+      ['a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '' }],
+    ])
+    const ports = makePorts({ detailOf: (id) => details.get(String(id)) })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    details.set('a', { maxTurnErrorSeq: 12, failureMessage: 'boom', lastAgentError: null, pending: [], finalText: '' })
     engine.observe(list({ a: summary('a', false) }))
     await flush()
     expect(ports.events).toEqual([{ kind: 'failed', sessionId: 'a', title: 'a', detail: 'boom' }])
@@ -96,12 +109,12 @@ describe('NotificationEngine', () => {
 
   it('raises failed when a host agent-error lands during the run', async () => {
     const details = new Map<string, SessionDetail>([
-      ['a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [] }],
+      ['a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '' }],
     ])
     const ports = makePorts({ detailOf: (id) => details.get(String(id)) })
     const engine = new NotificationEngine(ports)
     engine.observe(list({ a: summary('a', true) }))
-    details.set('a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: 'loop crashed', pending: [] })
+    details.set('a', { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: 'loop crashed', pending: [], finalText: '' })
     engine.observe(list({ a: summary('a', false) }))
     await flush()
     expect(ports.events).toEqual([{ kind: 'failed', sessionId: 'a', title: 'a', detail: 'loop crashed' }])
@@ -109,7 +122,7 @@ describe('NotificationEngine', () => {
 
   it('treats a stale pre-run agent error as not failed', async () => {
     const ports = makePorts({
-      detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: 'stale', pending: [] }),
+      detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: 'stale', pending: [], finalText: '' }),
     })
     const engine = new NotificationEngine(ports)
     engine.observe(list({ a: summary('a', true) }))
@@ -119,7 +132,7 @@ describe('NotificationEngine', () => {
   })
 
   it('raises question when the pending interaction becomes a question', async () => {
-    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [question('question', '继续吗?')] }) })
+    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [question('question', '继续吗?')], finalText: '' }) })
     const engine = new NotificationEngine(ports)
     engine.seed(list({ a: summary('a', false) }))
     engine.observe(list({ a: summary('a', false, 'question') }))
@@ -128,7 +141,7 @@ describe('NotificationEngine', () => {
   })
 
   it('raises permission when the pending interaction becomes an approval', async () => {
-    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [approval('bash', 'run a command')] }) })
+    const ports = makePorts({ detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [approval('bash', 'run a command')], finalText: '' }) })
     const engine = new NotificationEngine(ports)
     engine.seed(list({ a: summary('a', false) }))
     engine.observe(list({ a: summary('a', false, 'approval') }))
@@ -139,7 +152,7 @@ describe('NotificationEngine', () => {
   it('skips a stale settle when a newer run armed while settling', async () => {
     let release: (() => void) | undefined
     const ports = makePorts({
-      detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [] }),
+      detailOf: () => ({ maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, pending: [], finalText: '' }),
       settle: () => new Promise<void>(resolve => { release = resolve }),
     })
     const engine = new NotificationEngine(ports)

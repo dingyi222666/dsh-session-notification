@@ -37,6 +37,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
     setType: vi.fn(),
     testSound: vi.fn(),
     requestPermission: vi.fn(async () => {}),
+    testBrowserNotification: vi.fn(),
     uploadCustomSound: vi.fn(async () => {}),
     close: vi.fn(),
     ...callbacks,
@@ -50,6 +51,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
     setType: ReturnType<typeof vi.fn>
     testSound: ReturnType<typeof vi.fn>
     requestPermission: ReturnType<typeof vi.fn>
+    testBrowserNotification: ReturnType<typeof vi.fn>
     uploadCustomSound: ReturnType<typeof vi.fn>
   }
 }
@@ -184,6 +186,51 @@ describe('NotificationsSection', () => {
   it('shows the denied state once denied', () => {
     renderSection(stateOf({ permission: 'denied' }))
     expect(screen.getByText(zh['permission.denied'])).toBeTruthy()
+  })
+
+  it('shows the unsupported state when the environment lacks notifications', () => {
+    renderSection(stateOf({ permission: 'unsupported' }))
+    expect(screen.getByText(zh['permission.unsupported'])).toBeTruthy()
+  })
+
+  it('shows the paused hint while enabled but permission is default', () => {
+    renderSection(stateOf({
+      permission: 'default',
+      settings: { ...structuredClone(DEFAULT_NOTIFICATION_SETTINGS), browserEnabled: true },
+    }))
+    expect(screen.getByText(zh['permission.paused'])).toBeTruthy()
+  })
+
+  it('shows the paused hint while enabled but permission is denied', () => {
+    renderSection(stateOf({
+      permission: 'denied',
+      settings: { ...structuredClone(DEFAULT_NOTIFICATION_SETTINGS), browserEnabled: true },
+    }))
+    expect(screen.getByText(zh['permission.paused'])).toBeTruthy()
+  })
+
+  it('shows no paused hint while the switch is off', () => {
+    renderSection(stateOf())
+    expect(screen.queryByText(zh['permission.paused'])).toBeNull()
+  })
+
+  it('sends a test notification once granted and enabled', () => {
+    const callbacks = renderSection(stateOf({
+      permission: 'granted',
+      settings: { ...structuredClone(DEFAULT_NOTIFICATION_SETTINGS), browserEnabled: true },
+    }))
+    fireEvent.click(screen.getByText(zh['test.send']))
+    expect(callbacks.testBrowserNotification).toHaveBeenCalled()
+  })
+
+  it('hides the test button while disabled or permission is missing', () => {
+    renderSection(stateOf({ permission: 'granted' }))
+    expect(screen.queryByText(zh['test.send'])).toBeNull()
+    renderSection(stateOf({
+      permission: 'default',
+      settings: { ...structuredClone(DEFAULT_NOTIFICATION_SETTINGS), browserEnabled: true },
+    }))
+    expect(screen.queryByText(zh['test.send'])).toBeNull()
   })
 
   it('requests permission when the browser switch is turned on without permission', () => {

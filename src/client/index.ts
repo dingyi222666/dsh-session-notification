@@ -157,6 +157,9 @@ export function apply(ctx: ClientContext): void {
       requestPermission: async () => {
         bound?.setPermission(await requestBrowserPermission())
       },
+      testBrowserNotification: () => {
+        showBrowserNotification(t('test.notification.title'), t('test.notification.body'))
+      },
       uploadCustomSound: async (kind, file) => {
         if (file.size > MAX_CUSTOM_AUDIO_BYTES) return
         const dataUrl = await readFileAsDataUrl(file)
