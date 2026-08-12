@@ -3,4 +3,3 @@ lib/
 *.log
 .DS_Store
 .npmrc
-pnpm-lock.yaml
