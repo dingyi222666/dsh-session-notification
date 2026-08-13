@@ -5,4 +5,4 @@
 # boot graph (the 通知 / Notifications settings section).
 - insert:
     - id: dsh-session-notification
-      name: 'dsh-session-notification'
+      name: '@dingyi222666/dsh-session-notification'
