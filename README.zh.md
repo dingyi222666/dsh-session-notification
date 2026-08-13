@@ -9,8 +9,8 @@
 ## 安装
 
 ```sh
-# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
-dsh plugin --profile web add @dingyi222666/dsh-session-notification
+# 从 GitHub 安装（需要 dsh >= 0.1.0-rc.6）
+dsh plugin --profile web add github:dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web
 ```
