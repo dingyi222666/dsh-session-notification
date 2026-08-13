@@ -6,6 +6,12 @@ English | [中文](README.zh.md)
 
 A notification plugin for the dsh web GUI. When a session finishes, hits an error, asks you a question, or needs your permission, you get a heads-up: a sound plays, and when you step away from the tab a system notification keeps you in the loop.
 
+## Screenshots
+
+| The settings panel with the **通知 / Notifications** entry in the sidebar and the section content | The sound picker for each kind (the official dropdown) |
+| --- | --- |
+| ![The Notifications settings section](screenshots/01-notifications-section.png) | ![The sound picker menu](screenshots/02-sound-menu-open.png) |
+
 ## Install
 
 ```sh
@@ -20,12 +26,6 @@ Everything lives in this plugin — no harness (host) changes:
 - The settings section is registered through the client slot system (`settings.section`), exactly like official sections.
 - Preferences persist in the browser (localStorage) and sync across tabs; nothing requires the host's `WEB_SETTINGS_NAMESPACES` or any other host-package change. (The node half still reserves the `dsh-session-notification` namespace host-side through the settings seam; that reservation is inert without exposure.)
 - The settings shell maps only its own section ids to nav icons, so the 通知 nav row shows the shell's default gear.
-
-## Screenshots
-
-| The settings panel with the **通知 / Notifications** entry in the sidebar and the section content | The sound picker for each kind (the official dropdown) |
-| --- | --- |
-| ![The Notifications settings section](screenshots/01-notifications-section.png) | ![The sound picker menu](screenshots/02-sound-menu-open.png) |
 
 ## The four notification kinds
 

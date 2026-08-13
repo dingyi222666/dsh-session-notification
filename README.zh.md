@@ -6,6 +6,12 @@
 
 一个给 dsh Web GUI 的通知插件：会话跑完、出错、想问你问题、或需要你授权时，都有提示音提醒；离开当前标签页时，还会弹一条系统通知，让你不用一直盯着。
 
+## 截图
+
+| 设置面板——侧边栏里的「**通知**」入口与栏目内容 | 每种类型的音效选择器（官方下拉菜单） |
+| --- | --- |
+| ![通知设置栏目](screenshots/01-notifications-section.png) | ![音效选择器](screenshots/02-sound-menu-open.png) |
+
 ## 安装
 
 ```sh
@@ -20,12 +26,6 @@ dsh web
 - 设置栏目通过客户端 slot 系统（`settings.section`）注册，与官方栏目做法一致。
 - 偏好存在浏览器本地（localStorage）并跨标签页同步；不需要宿主的 `WEB_SETTINGS_NAMESPACES` 或任何其他宿主包改动。（Node 半区仍通过 settings 服务在宿主侧保留 `dsh-session-notification` 命名空间，未放行时它只是占位、无副作用。）
 - 设置外壳只给它自己认识的栏目 id 配导航图标，所以「通知」导航行显示的是外壳默认的齿轮。
-
-## 截图
-
-| 设置面板——侧边栏里的「**通知**」入口与栏目内容 | 每种类型的音效选择器（官方下拉菜单） |
-| --- | --- |
-| ![通知设置栏目](screenshots/01-notifications-section.png) | ![音效选择器](screenshots/02-sound-menu-open.png) |
 
 ## 四种通知类型
 
