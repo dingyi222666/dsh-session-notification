@@ -57,10 +57,8 @@ The browser half watches the sessions list snapshot and each session's conversat
 ## Install
 
 ```sh
-# 从 GitHub 安装（私有仓库，需已配置 GitHub 访问）
-dsh plugin --profile web add github:dingyi222666/dsh-session-notification
-# 或本地安装
-dsh plugin --profile web add /Users/dingyi/projects/dsh/dsh-session-notification
+# 从 npm 安装
+dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web
 ```

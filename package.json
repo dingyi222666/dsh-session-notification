@@ -1,5 +1,5 @@
 {
-  "name": "dsh-session-notification",
+  "name": "@dingyi222666/dsh-session-notification",
   "version": "0.1.0",
   "description": "Session-state notification plugin for the dsh web GUI: session completed/failed, question-asked, and permission-requested alerts with configurable built-in or custom sounds and browser notifications, plus a Notifications settings section",
   "type": "module",
@@ -80,5 +80,14 @@
     "vitest": "^4.1.8"
   },
   "license": "BSD-3-Clause",
-  "private": true
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts",
+    "cordis.patch.yml"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
