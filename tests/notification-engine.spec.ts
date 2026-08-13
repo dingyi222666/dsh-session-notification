@@ -18,7 +18,7 @@ function summary(id: string, running: boolean, pending?: PendingInteractionStatu
 }
 
 function list(byId: Record<string, ReturnType<typeof summary>>): SessionListState {
-  return { ids: Object.keys(byId) as SessionId[], byId, current: undefined, phase: 'ready', subagentsByParent: {}, tasksBySession: {}, currentAddress: undefined } as unknown as SessionListState
+  return { ids: Object.keys(byId) as SessionId[], byId, current: undefined, phase: 'ready', subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined } as unknown as SessionListState
 }
 
 /** A question pending interaction (structural stand-in for PendingWait). */
