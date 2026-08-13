@@ -23,13 +23,9 @@ Everything lives in this plugin — no harness (host) changes:
 
 ## Screenshots
 
-The settings panel with the **通知 / Notifications** entry in the sidebar and the section content:
-
-![The Notifications settings section](screenshots/01-notifications-section.png)
-
-The sound picker for each kind (the official dropdown):
-
-![The sound picker menu](screenshots/02-sound-menu-open.png)
+| The settings panel with the **通知 / Notifications** entry in the sidebar and the section content | The sound picker for each kind (the official dropdown) |
+| --- | --- |
+| ![The Notifications settings section](screenshots/01-notifications-section.png) | ![The sound picker menu](screenshots/02-sound-menu-open.png) |
 
 ## The four notification kinds
 

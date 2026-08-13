@@ -23,13 +23,9 @@ dsh web
 
 ## 截图
 
-设置面板——侧边栏里的「**通知**」入口与栏目内容：
-
-![通知设置栏目](screenshots/01-notifications-section.png)
-
-每种类型的音效选择器（官方下拉菜单）：
-
-![音效选择器](screenshots/02-sound-menu-open.png)
+| 设置面板——侧边栏里的「**通知**」入口与栏目内容 | 每种类型的音效选择器（官方下拉菜单） |
+| --- | --- |
+| ![通知设置栏目](screenshots/01-notifications-section.png) | ![音效选择器](screenshots/02-sound-menu-open.png) |
 
 ## 四种通知类型
 
