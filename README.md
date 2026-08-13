@@ -6,6 +6,21 @@ English | [中文](README.zh.md)
 
 A notification plugin for the dsh web GUI. When a session finishes, hits an error, asks you a question, or needs your permission, you get a heads-up: a sound plays, and when you step away from the tab a system notification keeps you in the loop.
 
+## Install
+
+```sh
+# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
+dsh plugin --profile web add @dingyi222666/dsh-session-notification
+# 重启 dsh web 后生效
+dsh web
+```
+
+Everything lives in this plugin — no harness (host) changes:
+
+- The settings section is registered through the client slot system (`settings.section`), exactly like official sections.
+- Preferences persist in the browser (localStorage) and sync across tabs; nothing requires the host's `WEB_SETTINGS_NAMESPACES` or any other host-package change. (The node half still reserves the `dsh-session-notification` namespace host-side through the settings seam; that reservation is inert without exposure.)
+- The settings shell maps only its own section ids to nav icons, so the 通知 nav row shows the shell's default gear.
+
 ## Screenshots
 
 The settings panel with the **通知 / Notifications** entry in the sidebar and the section content:
@@ -55,21 +70,6 @@ The browser half watches the sessions list snapshot and each session's conversat
 - A session's `running` edge true→false ends a run; the run is classified **failed** when a new `turn-error` node or a host `agent-error` appeared during it, otherwise **completed** (a failure that a retry recovered reads as completed).
 - A pending-interaction edge (`question` / `approval`) raises the question / permission kinds, with the question text or the tool name+reason in the notification body.
 - Sessions already idle (or already pending) when the plugin loads raise nothing.
-
-## Install
-
-```sh
-# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
-dsh plugin --profile web add @dingyi222666/dsh-session-notification
-# 重启 dsh web 后生效
-dsh web
-```
-
-Everything lives in this plugin — no harness (host) changes:
-
-- The settings section is registered through the client slot system (`settings.section`), exactly like official sections.
-- Preferences persist in the browser (localStorage) and sync across tabs; nothing requires the host's `WEB_SETTINGS_NAMESPACES` or any other host-package change. (The node half still reserves the `dsh-session-notification` namespace host-side through the settings seam; that reservation is inert without exposure.)
-- The settings shell maps only its own section ids to nav icons, so the 通知 nav row shows the shell's default gear.
 
 ## Development
 

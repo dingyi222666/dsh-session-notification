@@ -6,6 +6,21 @@
 
 一个给 dsh Web GUI 的通知插件：会话跑完、出错、想问你问题、或需要你授权时，都有提示音提醒；离开当前标签页时，还会弹一条系统通知，让你不用一直盯着。
 
+## 安装
+
+```sh
+# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
+dsh plugin --profile web add @dingyi222666/dsh-session-notification
+# 重启 dsh web 后生效
+dsh web
+```
+
+一切都在插件自身实现——不依赖 harness（宿主）的任何改动：
+
+- 设置栏目通过客户端 slot 系统（`settings.section`）注册，与官方栏目做法一致。
+- 偏好存在浏览器本地（localStorage）并跨标签页同步；不需要宿主的 `WEB_SETTINGS_NAMESPACES` 或任何其他宿主包改动。（Node 半区仍通过 settings 服务在宿主侧保留 `dsh-session-notification` 命名空间，未放行时它只是占位、无副作用。）
+- 设置外壳只给它自己认识的栏目 id 配导航图标，所以「通知」导航行显示的是外壳默认的齿轮。
+
 ## 截图
 
 设置面板——侧边栏里的「**通知**」入口与栏目内容：
@@ -55,21 +70,6 @@
 - 会话 `running` 由 true→false 表示一轮运行结束；运行期间若出现了新的 `turn-error` 节点或宿主 `agent-error`，判定为**失败**，否则为**完成**（被重试挽回的失败按完成处理）。
 - 待交互边沿出现 `question` / `approval` 时，触发问问题 / 权限请求通知，正文带问题文本或工具名+原因。
 - 插件加载时已经空闲（或已经在等待交互）的会话不会触发任何通知。
-
-## 安装
-
-```sh
-# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
-dsh plugin --profile web add @dingyi222666/dsh-session-notification
-# 重启 dsh web 后生效
-dsh web
-```
-
-一切都在插件自身实现——不依赖 harness（宿主）的任何改动：
-
-- 设置栏目通过客户端 slot 系统（`settings.section`）注册，与官方栏目做法一致。
-- 偏好存在浏览器本地（localStorage）并跨标签页同步；不需要宿主的 `WEB_SETTINGS_NAMESPACES` 或任何其他宿主包改动。（Node 半区仍通过 settings 服务在宿主侧保留 `dsh-session-notification` 命名空间，未放行时它只是占位、无副作用。）
-- 设置外壳只给它自己认识的栏目 id 配导航图标，所以「通知」导航行显示的是外壳默认的齿轮。
 
 ## 开发
 
