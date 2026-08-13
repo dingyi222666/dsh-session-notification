@@ -1,5 +1,7 @@
 # dsh-session-notification
 
+[![npm version](https://img.shields.io/npm/v/@dingyi222666/dsh-session-notification.svg)](https://www.npmjs.com/package/@dingyi222666/dsh-session-notification)
+
 **中文** | [English](./README.md)
 
 一个给 dsh Web GUI 的通知插件：会话跑完、出错、想问你问题、或需要你授权时，都有提示音提醒；离开当前标签页时，还会弹一条系统通知，让你不用一直盯着。
@@ -57,7 +59,7 @@
 ## 安装
 
 ```sh
-# 从 npm 安装
+# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web

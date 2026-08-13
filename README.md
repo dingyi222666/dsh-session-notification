@@ -1,5 +1,7 @@
 # dsh-session-notification
 
+[![npm version](https://img.shields.io/npm/v/@dingyi222666/dsh-session-notification.svg)](https://www.npmjs.com/package/@dingyi222666/dsh-session-notification)
+
 English | [中文](README.zh.md)
 
 A notification plugin for the dsh web GUI. When a session finishes, hits an error, asks you a question, or needs your permission, you get a heads-up: a sound plays, and when you step away from the tab a system notification keeps you in the loop.
@@ -57,7 +59,7 @@ The browser half watches the sessions list snapshot and each session's conversat
 ## Install
 
 ```sh
-# 从 npm 安装
+# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web
