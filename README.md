@@ -8,16 +8,16 @@ A notification plugin for the dsh web GUI. When a session finishes, hits an erro
 
 ## Screenshots
 
-| The settings panel with the **通知 / Notifications** entry in the sidebar and the section content | The sound picker for each kind (the official dropdown) |
+| The settings panel with the **Notifications** entry in the sidebar and the section content | The sound picker for each kind (the official dropdown) |
 | --- | --- |
 | ![The Notifications settings section](screenshots/01-notifications-section.png) | ![The sound picker menu](screenshots/02-sound-menu-open.png) |
 
 ## Install
 
 ```sh
-# 从 npm 安装（需要 dsh >= 0.1.0-rc.6）
+# Install from npm (requires dsh >= 0.1.0-rc.6)
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
-# 重启 dsh web 后生效
+# Restart dsh web for it to take effect
 dsh web
 ```
 
@@ -25,37 +25,37 @@ Everything lives in this plugin — no harness (host) changes:
 
 - The settings section is registered through the client slot system (`settings.section`), exactly like official sections.
 - Preferences persist in the browser (localStorage) and sync across tabs; nothing requires the host's `WEB_SETTINGS_NAMESPACES` or any other host-package change. (The node half still reserves the `dsh-session-notification` namespace host-side through the settings seam; that reservation is inert without exposure.)
-- The settings shell maps only its own section ids to nav icons, so the 通知 nav row shows the shell's default gear.
+- The settings shell maps only its own section ids to nav icons, so the Notifications nav row shows the shell's default gear.
 
 ## The four notification kinds
 
 | Kind | When it fires | Default sound |
 | --- | --- | --- |
-| 会话完成 / Session completed | A turn ends normally (`turn/end` completed) | 叮咚 chime |
-| 会话失败 / Session failed | A turn breaks with an error, or the host reports an agent error | 低鸣 fault |
-| 问问题 / Question asked | The agent is waiting for your answer (`question/requested`) | 轻响 pop |
-| 权限请求 / Permission requested | The agent requests an authorized operation (`approval/requested`) | 警示 alert |
+| Session completed | A turn ends normally (`turn/end` completed) | chime |
+| Session failed | A turn breaks with an error, or the host reports an agent error | fault |
+| Question asked | The agent is waiting for your answer (`question/requested`) | pop |
+| Permission requested | The agent requests an authorized operation (`approval/requested`) | alert |
 
 Each kind can be enabled or disabled and reassigned to any of the four built-in sound effects (or muted). The four sounds are synthesized with Web Audio — no audio files are shipped — and the master volume is adjustable with the official-style slider.
 
 ## Custom audio
 
-Beyond the four built-in sounds, each kind accepts **your own audio file** (mp3/ogg/wav, up to 1 MB): pick 自定义音频 / Custom audio on a kind's row to upload one, and it replaces the built-in for that kind — with a 更换 / replace and remove affordance, plus the 已使用自定义音频 tag. Custom files are stored browser-locally (they are device media, not shared preferences).
+Beyond the four built-in sounds, each kind accepts **your own audio file** (mp3/ogg/wav, up to 1 MB): pick Custom audio on a kind's row to upload one, and it replaces the built-in for that kind — with a Replace and remove affordance, plus the Custom audio in use tag. Custom files are stored browser-locally (they are device media, not shared preferences).
 
 ## Browser notifications & the quiet default
 
-Browser (system-level) notifications are **off by default**; turning the switch on asks for the browser's permission first (a user gesture). Once granted, a notification is shown when the event's session is not the one you are reading, or when the tab is in the background. Notifications carry the **page's own icon** (the favicon the harness serves). A completed session's notification carries its **final reply text** (the last assistant message). The 测试通知 / Test notification button in the section sends one immediately to verify the channel once permission is granted. The session you are reading stays **quiet by default** — its own events don't interrupt you; flip the 当前会话也提醒 / Alert for the current session toggle if you want it to alert too.
+Browser (system-level) notifications are **off by default**; turning the switch on asks for the browser's permission first (a user gesture). Once granted, a notification is shown when the event's session is not the one you are reading, or when the tab is in the background. Notifications carry the **page's own icon** (the favicon the harness serves). A completed session's notification carries its **final reply text** (the last assistant message). The Test notification button in the section sends one immediately to verify the channel once permission is granted. The session you are reading stays **quiet by default** — its own events don't interrupt you; flip the Alert for the current session toggle if you want it to alert too.
 
 ## The Notifications settings section
 
-The plugin registers a **通知 / Notifications** section in the settings panel (设置 ⚙ → 通知):
+The plugin registers a **Notifications** section in the settings panel (Settings ⚙ → Notifications):
 
-- **浏览器通知** master switch (+ permission state and an enable button),
-- **当前会话也提醒** toggle (opt in to being alerted while reading that session),
-- **提示音** master switch,
-- **音量** slider,
-- one row per notification kind: enable switch, custom-audio upload, sound picker (the official dropdown menu), and a 试听 / preview button,
-- a 测试通知 / test-notification button on the browser-notifications row (verifies the OS channel once permission is granted).
+- **Browser notifications** master switch (+ permission state and an enable button),
+- **Alert for the current session** toggle (opt in to being alerted while reading that session),
+- **Sound** master switch,
+- **Volume** slider,
+- one row per notification kind: enable switch, custom-audio upload, sound picker (the official dropdown menu), and a Preview button,
+- a Test notification button on the browser-notifications row (verifies the OS channel once permission is granted).
 
 Preferences are stored **browser-locally** (localStorage) under the `dsh-session-notification` key — no host settings-namespace exposure required — so they persist across sessions and sync across tabs, and never depend on a harness change.
 
