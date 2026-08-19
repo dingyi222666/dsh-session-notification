@@ -36,7 +36,7 @@ Everything lives in this plugin — no harness (host) changes:
 | Question asked | The agent is waiting for your answer (`question/requested`) | pop |
 | Permission requested | The agent requests an authorized operation (`approval/requested`) | alert |
 
-Each kind can be enabled or disabled and reassigned to any of the four built-in sound effects (or muted). The four sounds are synthesized with Web Audio — no audio files are shipped — and the master volume is adjustable with the official-style slider.
+Each kind can be enabled or disabled and reassigned to any of the four built-in sound effects (or muted). The four sounds are synthesized with Web Audio — no audio files are shipped — and the master volume is adjustable with the official-style slider (0–200%; above 100% amplifies the built-in sounds).
 
 ## Custom audio
 
@@ -53,7 +53,7 @@ The plugin registers a **Notifications** section in the settings panel (Settings
 - **Browser notifications** master switch (+ permission state and an enable button),
 - **Alert for the current session** toggle (opt in to being alerted while reading that session),
 - **Sound** master switch,
-- **Volume** slider,
+- **Volume** slider (0–200%),
 - one row per notification kind: enable switch, custom-audio upload, sound picker (the official dropdown menu), and a Preview button,
 - a Test notification button on the browser-notifications row (verifies the OS channel once permission is granted).
 

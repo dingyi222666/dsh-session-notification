@@ -33,9 +33,10 @@ describe('SOUND_PATTERNS', () => {
 })
 
 describe('clampVolume', () => {
-  it('clamps into [0, 1]', () => {
+  it('clamps into [0, 2] (0–200%)', () => {
     expect(clampVolume(0.5)).toBe(0.5)
-    expect(clampVolume(1.5)).toBe(1)
+    expect(clampVolume(1.5)).toBe(1.5)
+    expect(clampVolume(2.5)).toBe(2)
     expect(clampVolume(-1)).toBe(0)
   })
 })

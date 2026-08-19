@@ -39,8 +39,9 @@ describe('resolveNotificationSettings', () => {
     expect(resolved.types.completed).toEqual(DEFAULT_NOTIFICATION_SETTINGS.types.completed)
   })
 
-  it('clamps the volume into [0, 1]', () => {
-    expect(resolveNotificationSettings({ volume: 1.5 }).volume).toBe(1)
+  it('clamps the volume into [0, 2]', () => {
+    expect(resolveNotificationSettings({ volume: 1.5 }).volume).toBe(1.5)
+    expect(resolveNotificationSettings({ volume: 2.5 }).volume).toBe(2)
     expect(resolveNotificationSettings({ volume: -0.5 }).volume).toBe(0)
     expect(resolveNotificationSettings({ volume: Number.NaN }).volume).toBe(DEFAULT_NOTIFICATION_SETTINGS.volume)
   })

@@ -106,6 +106,7 @@ function Switch({ on, label, onChange }: {
 /**
  * Official-style volume slider (no native range input): a track with a
  * filled portion and a draggable thumb, driven by pointer and keyboard.
+ * The range is 0–200% (value 0–2); >100% amplifies the built-in sounds.
  */
 function VolumeSlider({ value, label, onChange }: {
   value: number
@@ -119,10 +120,10 @@ function VolumeSlider({ value, label, onChange }: {
     const rect = trackRef.current?.getBoundingClientRect()
     if (rect === undefined || rect.width === 0) return value
     const ratio = (clientX - rect.left) / rect.width
-    return Math.min(1, Math.max(0, ratio))
+    return Math.min(2, Math.max(0, ratio * 2))
   }
   const commit = (clientX: number): void => {
-    onChange(Math.round(valueFromClientX(clientX) * 20) / 20)
+    onChange(Math.round(valueFromClientX(clientX) * 40) / 20)
   }
   const onPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
     setDragging(true)
@@ -136,7 +137,7 @@ function VolumeSlider({ value, label, onChange }: {
     const step = 0.05
     if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
       event.preventDefault()
-      onChange(Math.min(1, value + step))
+      onChange(Math.min(2, value + step))
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
       event.preventDefault()
       onChange(Math.max(0, value - step))
@@ -145,7 +146,7 @@ function VolumeSlider({ value, label, onChange }: {
       onChange(0)
     } else if (event.key === 'End') {
       event.preventDefault()
-      onChange(1)
+      onChange(2)
     }
   }
   const percent = Math.round(value * 100)
@@ -157,7 +158,7 @@ function VolumeSlider({ value, label, onChange }: {
         role="slider"
         aria-label={label}
         aria-valuemin={0}
-        aria-valuemax={100}
+        aria-valuemax={200}
         aria-valuenow={percent}
         tabIndex={0}
         onPointerDown={onPointerDown}

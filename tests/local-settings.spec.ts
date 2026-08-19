@@ -28,6 +28,13 @@ describe('createLocalSettingsScope', () => {
     expect(localStorage.getItem(LOCAL_STORAGE_KEY)).toBeTruthy()
   })
 
+  it('persists a volume above 100%', async () => {
+    const scope = createLocalSettingsScope()
+    await scope.set('volume', 1.8)
+    const again = createLocalSettingsScope()
+    expect(again.getSnapshot().value?.volume).toBe(1.8)
+  })
+
   it('persists nested per-kind type patches', async () => {
     const scope = createLocalSettingsScope()
     await scope.set('types', {

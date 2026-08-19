@@ -76,7 +76,7 @@ export class SoundPlayer {
   private master: GainNode | undefined
 
   /**
-   * @param volume - reads the current master volume in [0, 1] at play time.
+   * @param volume - reads the current master volume in [0, 2] at play time.
    */
   constructor(private readonly volume: () => number) {}
 
@@ -122,17 +122,21 @@ export class SoundPlayer {
   /**
    * Play a user-supplied audio file (data URL) at the master volume. Uses an
    * HTMLAudioElement so the browser's native decoder handles mp3/ogg/wav.
+   * The element's `volume` is capped at 1.0 by the browser, so custom audio
+   * cannot exceed 100% even when the master volume is above it.
    * @param dataUrl - the audio data URL.
    */
   playCustom(dataUrl: string): void {
     if (typeof Audio === 'undefined') return
     const audio = new Audio(dataUrl)
-    audio.volume = clampVolume(this.volume())
+    audio.volume = Math.min(1, clampVolume(this.volume()))
     void audio.play().catch(() => { /* autoplay rejection is silent */ })
   }
 }
 
-/** Clamp a volume candidate to [0, 1] (the settings schema already bounds it). */
+/** Clamp a volume candidate to [0, 2] (0–200%); >1 amplifies the built-in
+ *  Web-Audio sounds. Custom audio is additionally capped at 1.0 by the
+ *  browser's audio element. */
 export function clampVolume(volume: number): number {
-  return Math.min(1, Math.max(0, volume))
+  return Math.min(2, Math.max(0, volume))
 }
