@@ -11,7 +11,7 @@
  *    modules node half into window.__DSH_BOOT__ — a lazy module-table entry
  *    whose externals are exactly the platform seed modules, answered at
  *    runtime by the shell's loader (react family, cordis, ui-slots,
- *    ui-primitives, web-react, schema-form) plus the documented
+ *    ui-primitives, schema-form) plus the documented
  *    runtime/client store exemption.
  *
  * CSS Modules are compiled by lightningcss inside the bundle: importing
@@ -31,7 +31,6 @@ const PLUGIN_ID = '@dingyi222666/dsh-session-notification'
 const PLATFORM_MODULES = [
   'react', 'react/jsx-runtime', 'react-dom', 'react-dom/client', 'cordis',
   '@deepseek-ai/dsh-client-ui-slots',
-  '@deepseek-ai/dsh-client-web-react',
   '@deepseek-ai/dsh-client-ui-primitives',
   '@deepseek-ai/dsh-client-schema-form',
 ] as const
