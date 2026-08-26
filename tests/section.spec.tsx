@@ -121,20 +121,13 @@ describe('NotificationsSection', () => {
     const callbacks = renderSection(stateOf())
     const slider = screen.getByRole('slider')
     expect(slider.getAttribute('aria-valuenow')).toBe('60')
-    expect(slider.getAttribute('aria-valuemax')).toBe('200')
+    expect(slider.getAttribute('aria-valuemax')).toBe('100')
     fireEvent.keyDown(slider, { key: 'ArrowRight' })
     expect(callbacks.setVolume).toHaveBeenCalledWith(0.65)
     fireEvent.keyDown(slider, { key: 'End' })
-    expect(callbacks.setVolume).toHaveBeenCalledWith(2)
+    expect(callbacks.setVolume).toHaveBeenCalledWith(1)
     fireEvent.keyDown(slider, { key: 'Home' })
     expect(callbacks.setVolume).toHaveBeenCalledWith(0)
-  })
-
-  it('renders a volume above 100% as its percent', () => {
-    renderSection(stateOf({ settings: { ...structuredClone(DEFAULT_NOTIFICATION_SETTINGS), volume: 1.5 } }))
-    const slider = screen.getByRole('slider')
-    expect(slider.getAttribute('aria-valuenow')).toBe('150')
-    expect(screen.getByText('150%')).toBeTruthy()
   })
 
   it('offers the 自定义 option in every sound picker', () => {

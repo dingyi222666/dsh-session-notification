@@ -151,7 +151,7 @@ export function apply(ctx: ClientContext): void {
       },
       setNotifyCurrent: (enabled) => { persist('notifyCurrent', enabled) },
       setSoundEnabled: (enabled) => { persist('soundEnabled', enabled) },
-      setVolume: (volume) => { persist('volume', Math.min(2, Math.max(0, volume))) },
+      setVolume: (volume) => { persist('volume', Math.min(1, Math.max(0, volume))) },
       setType: (kind, patch) => { persistType(kind, patch) },
       testSound: (sound, customUrl) => { playEffective(sound, customUrl) },
       requestPermission: async () => {

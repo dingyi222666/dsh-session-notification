@@ -40,7 +40,8 @@ export interface NotificationSettings {
   notifyCurrent: boolean
   /** Master switch for sound playback. */
   soundEnabled: boolean
-  /** Master playback volume in [0, 2] (0–200%; >1 amplifies the built-in sounds). */
+  /** Master playback volume in [0, 1] (0–100%); the sound chain applies a
+   *  fixed loudness boost on top, so the scale itself never needs to exceed 1. */
   volume: number
   /** Per-kind preferences. */
   types: Record<NotificationType, NotificationTypeSettings>
@@ -111,7 +112,7 @@ export function resolveNotificationSettings(raw: unknown): NotificationSettings 
     }
   }
   const volume = typeof source.volume === 'number' && Number.isFinite(source.volume)
-    ? Math.min(2, Math.max(0, source.volume)) : DEFAULT_NOTIFICATION_SETTINGS.volume
+    ? Math.min(1, Math.max(0, source.volume)) : DEFAULT_NOTIFICATION_SETTINGS.volume
   return {
     browserEnabled: typeof source.browserEnabled === 'boolean'
       ? source.browserEnabled : DEFAULT_NOTIFICATION_SETTINGS.browserEnabled,
