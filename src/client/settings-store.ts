@@ -6,7 +6,7 @@
  * apply world syncs accepted scope snapshots through those actions. Component
  * reads go through `useStore`.
  */
-import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client'
+import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
 import type { SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
 import {
   DEFAULT_NOTIFICATION_SETTINGS,

@@ -1,6 +1,6 @@
 {
   "name": "@dingyi222666/dsh-session-notification",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Session-state notification plugin for the dsh web GUI: session completed/failed, question-asked, and permission-requested alerts with configurable built-in or custom sounds and browser notifications, plus a Notifications settings section",
   "type": "module",
   "main": "lib/index.js",
