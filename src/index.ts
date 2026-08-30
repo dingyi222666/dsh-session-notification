@@ -7,9 +7,10 @@
  * exposure to work.
  */
 import type { Context } from '@deepseek-ai/cordis'
-// Value import: the settings namespace brand. The module's Context merge
-// (ctx.settings) rides the same import.
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
+// Type-only: the settings service's Context merge (ctx.settings). The
+// register API brands the namespace string itself (0.1.2-alpha.2 dropped the
+// settingsNamespace() helper), so the literal is passed straight through.
+import type {} from '@deepseek-ai/dsh-settings'
 import { NOTIFICATIONS_NS } from './settings.ts'
 import { NotificationSettingsSchema } from './schema.ts'
 
@@ -26,6 +27,6 @@ export { NotificationSettingsSchema } from './schema.ts'
  */
 export function apply(ctx: Context): void {
   ctx.inject(['settings'], (settingsCtx) => {
-    settingsCtx.settings.register(settingsNamespace(NOTIFICATIONS_NS), NotificationSettingsSchema)
+    settingsCtx.settings.register(NOTIFICATIONS_NS, NotificationSettingsSchema)
   })
 }
