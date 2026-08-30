@@ -1,22 +1,54 @@
 /**
- * The notification engine: watches the sessions-list snapshot for running and
- * pending-interaction edges, classifies each finished run as completed or
- * failed from the session's conversation snapshot, and hands classified
- * events to a dispatcher. The engine is dependency-injected and DOM-free so
- * the classification logic runs under plain vitest; the browser wiring lives
- * in `index.ts`.
+ * The notification engine: watches the sessions-list snapshot for running
+ * edges and the uiSession pending-interactions map for question/approval
+ * edges, classifies each finished run as completed or failed from the chat
+ * view nodes, and hands classified events to a dispatcher. The engine is
+ * dependency-injected and DOM-free so the classification logic runs under
+ * plain vitest; the browser wiring lives in `index.ts`.
+ *
+ * dsh 0.1.2-alpha.2 data model: the session snapshot no longer carries the
+ * chat view (`chat.nodes`) or `pendingInteraction` — the chat view comes from
+ * `uiConversation.binding(binding).target('chat')` and pending interactions
+ * from `uiSession.pendingInteractions`, so the engine reads those two
+ * surfaces instead of the old single list snapshot.
  */
 import type { SessionId } from '@deepseek-ai/dsh-client-connection/client'
+import type { SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
 import type {
-  AssistantBlock, ConversationSnapshot, PendingInteraction, PendingInteractionStatus,
-  SessionListState, TurnErrorNode,
+  AssistantBlock, SessionListState, TurnErrorNode,
 } from '@deepseek-ai/dsh-client-runtime/client'
 import type { NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 
 /** One selectable notification kind (re-export for the settings rows). */
 export type { NotificationType } from '../settings.ts'
 
-/** Per-session facts the engine reads from the conversation snapshot. */
+/** Minimal structural view of the alpha chat target snapshot (ui-chat ChatSnapshot). */
+export interface ChatViewNode {
+  kind: string
+  data: unknown
+}
+
+/** Minimal structural view of the chat node store. */
+export interface ChatNodeStoreLike {
+  values(): IterableIterator<ChatViewNode>
+}
+
+/** Minimal structural view of the chat snapshot the engine classifies on. */
+export interface ChatSnapshotLike {
+  nodes: ChatNodeStoreLike
+}
+
+/** One pending interaction's notification facts (from uiSession). */
+export interface PendingFacts {
+  /** Interaction identity; a replacement interaction carries a new key. */
+  key: string
+  /** Plugin notification kind: question covers 'question'/'plan-review'. */
+  kind: 'question' | 'approval'
+  /** Interaction detail text (question text / tool name). */
+  detail: string
+}
+
+/** Per-session facts the engine reads from the session and chat snapshots. */
 export interface SessionDetail {
   /** Max seq of materialized turn-error nodes (unretried failures only). */
   maxTurnErrorSeq: number
@@ -24,8 +56,6 @@ export interface SessionDetail {
   failureMessage: string | null
   /** Host agent-error text, null when none. */
   lastAgentError: string | null
-  /** Pending interactions visible in the session snapshot. */
-  pending: readonly PendingInteraction[]
   /** Text of the last assistant message (the final completion text); '' when none. */
   finalText: string
 }
@@ -58,23 +88,18 @@ interface RunState {
   baselineAgentError: string | null
 }
 
-/** Last-observed list signal for one session. */
-interface PrevSignal {
-  running: boolean
-  pending: PendingInteractionStatus | undefined
-}
-
 /**
- * Classifies session lifecycle edges into notification events. Edges are
- * observed on the sessions-list snapshot: a running true→false transition
- * arms a classification (completed vs failed) after the settle window; a
- * pending-interaction arrival raises the question/permission kinds. A session
- * that was already idle when observation started raises nothing.
+ * Classifies session lifecycle edges into notification events. Running
+ * true→false transitions arm a classification (completed vs failed) after the
+ * settle window; a pending-interaction arrival raises the question/permission
+ * kinds (observed through the uiSession pending map). A session that was
+ * already idle when observation started raises nothing.
  */
 export class NotificationEngine {
-  private readonly prev = new Map<SessionId, PrevSignal>()
+  private readonly prevRunning = new Map<SessionId, boolean>()
   private readonly runs = new Map<SessionId, RunState>()
   private readonly settling = new Set<SessionId>()
+  private readonly pendingKeys = new Map<SessionId, string>()
 
   /** @param ports - injected readers and sink. */
   constructor(private readonly ports: NotificationEnginePorts) {}
@@ -88,40 +113,53 @@ export class NotificationEngine {
     for (const summary of Object.values(sessions.byId)) {
       const id = summary.id
       seen.add(id)
-      const prev = this.prev.get(id) ?? { running: false, pending: undefined }
-      if (summary.pendingInteraction !== prev.pending) {
-        if (summary.pendingInteraction === 'question') this.raise('question', id)
-        else if (summary.pendingInteraction === 'approval') this.raise('permission', id)
-        prev.pending = summary.pendingInteraction
-      }
-      if (prev.running && !summary.running) {
+      const prevRunning = this.prevRunning.get(id) ?? false
+      if (prevRunning && !summary.running) {
         void this.settleRun(id)
-      } else if (!prev.running && summary.running) {
+      } else if (!prevRunning && summary.running) {
         this.armRun(id)
       }
-      prev.running = summary.running
-      this.prev.set(id, prev)
+      this.prevRunning.set(id, summary.running)
     }
-    for (const id of this.prev.keys()) {
+    for (const id of this.prevRunning.keys()) {
       if (!seen.has(id)) {
-        this.prev.delete(id)
+        this.prevRunning.delete(id)
         this.runs.delete(id)
+        this.pendingKeys.delete(id)
       }
     }
   }
 
   /**
    * Establish the baseline before live observation: record every session's
-   * current signal and arm runs already in progress, but raise nothing —
-   * pending interactions and idle sessions that predate the plugin raise no
-   * notification.
+   * current running bit and arm runs already in progress, but raise nothing —
+   * idle sessions that predate the plugin raise no notification.
    * @param sessions - the first list snapshot.
    */
   seed(sessions: SessionListState): void {
     for (const summary of Object.values(sessions.byId)) {
       const id = summary.id
-      this.prev.set(id, { running: summary.running, pending: summary.pendingInteraction })
+      this.prevRunning.set(id, summary.running)
       if (summary.running) this.armRun(id)
+    }
+  }
+
+  /**
+   * Process one uiSession pending-interactions snapshot. A session entering
+   * the map (or replacing its interaction — a new key, or a kind switch)
+   * raises the question/permission kind; leaving the map raises nothing.
+   * @param pending - current effective pending interaction per session.
+   */
+  observePending(pending: ReadonlyMap<SessionId, PendingFacts>): void {
+    for (const [id, facts] of pending) {
+      const prevKey = this.pendingKeys.get(id)
+      if (prevKey === undefined || prevKey !== facts.key) {
+        this.raise(facts.kind, id, facts.detail)
+      }
+      this.pendingKeys.set(id, facts.key)
+    }
+    for (const id of this.pendingKeys.keys()) {
+      if (!pending.has(id)) this.pendingKeys.delete(id)
     }
   }
 
@@ -163,71 +201,59 @@ export class NotificationEngine {
     }
   }
 
-  /** Raise the question/permission kind on a pending-interaction edge. */
-  private raise(kind: 'question' | 'permission', id: SessionId): void {
-    const detail = this.ports.detailOf(id)
-    const pending = detail?.pending ?? []
+  /** Raise the question/permission kind on a pending-interaction arrival. */
+  private raise(kind: PendingFacts['kind'], id: SessionId, detail: string): void {
     this.ports.emit({
-      kind,
+      // The plugin's four kinds fold the alpha 'approval' interaction into
+      // the 'permission' kind (and 'question'/'plan-review' into 'question').
+      kind: kind === 'approval' ? 'permission' : 'question',
       sessionId: id,
       title: this.ports.titleOf(id),
-      detail: kind === 'question' ? questionText(pending) : approvalText(pending),
+      detail,
     })
   }
 }
 
-/** Extract the first question text from a session's pending interactions. */
-export function questionText(pending: readonly PendingInteraction[]): string {
-  for (const item of pending) {
-    if (item.kind !== 'question') continue
-    const first = item.payload.questions[0]
-    if (first !== undefined && first.question.length > 0) return first.question
-  }
-  return ''
-}
-
-/** Extract the tool name (+ reason) from a session's pending approvals. */
-export function approvalText(pending: readonly PendingInteraction[]): string {
-  for (const item of pending) {
-    if (item.kind !== 'approval') continue
-    const { toolName, reason } = item.payload
-    return reason !== undefined && reason.length > 0 ? `${toolName}：${reason}` : toolName
-  }
-  return ''
-}
-
 /**
- * Project one conversation snapshot into the engine's {@link SessionDetail}.
- * The final completion text is the joined text of the last assistant step
- * (the chat view's `assistant-step` node) that carries any.
- * @param snapshot - the session's current conversation snapshot.
+ * Project one session's lifecycle + chat snapshots into the engine's
+ * {@link SessionDetail}. The final completion text is the joined text of the
+ * last assistant step (the chat view's `assistant-step` node) that carries
+ * any; failure classification reads the chat view's turn-error nodes plus the
+ * session's host agent-error. An absent chat target (session not opened)
+ * yields no turn-error or final-text facts, never a throw.
+ * @param session - the session lifecycle snapshot (session-controller).
+ * @param chat - the session's chat view snapshot, when one is materialized.
  * @returns the derived detail.
  */
-export function sessionDetailOf(snapshot: ConversationSnapshot): SessionDetail {
+export function sessionDetailOf(
+  session: SessionSnapshot,
+  chat: ChatSnapshotLike | undefined,
+): SessionDetail {
   let maxTurnErrorSeq = 0
   let failureMessage: string | null = null
   let finalText = ''
-  for (const node of snapshot.chat.nodes.values()) {
-    if (node.kind === 'turn-error') {
-      const data = node.data as TurnErrorNode
-      if (data.seq > maxTurnErrorSeq) {
-        maxTurnErrorSeq = data.seq
-        failureMessage = data.message
+  if (chat !== undefined) {
+    for (const node of chat.nodes.values()) {
+      if (node.kind === 'turn-error') {
+        const data = node.data as TurnErrorNode
+        if (data.seq > maxTurnErrorSeq) {
+          maxTurnErrorSeq = data.seq
+          failureMessage = data.message
+        }
+      } else if (node.kind === 'assistant-step') {
+        const data = node.data as { blocks: readonly AssistantBlock[] }
+        const text = data.blocks
+          .filter((block): block is Extract<AssistantBlock, { kind: 'text' }> => block.kind === 'text')
+          .map(block => block.text)
+          .join('')
+        if (text.length > 0) finalText = text
       }
-    } else if (node.kind === 'assistant-step') {
-      const data = node.data as { readonly blocks: readonly AssistantBlock[] }
-      const text = data.blocks
-        .filter((block): block is Extract<AssistantBlock, { kind: 'text' }> => block.kind === 'text')
-        .map(block => block.text)
-        .join('')
-      if (text.length > 0) finalText = text
     }
   }
   return {
     maxTurnErrorSeq,
     failureMessage,
-    lastAgentError: snapshot.lastAgentError,
-    pending: snapshot.pending,
+    lastAgentError: session.lastAgentError,
     finalText,
   }
 }

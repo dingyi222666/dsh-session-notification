@@ -27,6 +27,14 @@ import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/c
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 // Type-only: the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+// Type-only: the alpha sessions service (ctx.sessions) and the chat/pending
+// surfaces the engine reads (ctx.uiConversation / ctx.uiSession).
+import type {} from '@deepseek-ai/dsh-api-session-controller/client'
+import type { SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type {
+  SessionPendingInteractionSnapshot,
+} from '@deepseek-ai/dsh-client-ui-session/client'
 import type { NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 import { DEFAULT_NOTIFICATION_SETTINGS } from '../settings.ts'
 import { createLocalSettingsScope } from './local-settings.ts'
@@ -35,6 +43,7 @@ import { browserPermission, requestBrowserPermission, showBrowserNotification } 
 import { MAX_CUSTOM_AUDIO_BYTES, readCustomSound, readFileAsDataUrl, writeCustomSound } from './custom-audio.ts'
 import {
   NotificationDispatcher, NotificationEngine, sessionDetailOf,
+  type ChatSnapshotLike, type PendingFacts,
 } from './notification-service.ts'
 import { createNotificationsStore } from './settings-store.ts'
 import {
@@ -55,8 +64,10 @@ const NS = 'notifications'
 /** How long a finished run waits for trailing wire frames before classification. */
 const SETTLE_MS = 250
 
-/** Required services: the slot registry, dictionaries, and the session list. */
-export const inject = ['slots', 'locale', 'sessions']
+/** Required services: the slot registry, dictionaries, the session list, the
+ *  alpha chat view (uiConversation), and the pending-interaction map
+ *  (uiSession). */
+export const inject = ['slots', 'locale', 'sessions', 'uiConversation', 'uiSession']
 
 /**
  * Client plugin body: bind the browser-local preferences scope, register the
@@ -104,7 +115,19 @@ export function apply(ctx: ClientContext): void {
   const engine = new NotificationEngine({
     detailOf: (id: SessionId) => {
       const binding = ctx.sessions.binding(id)
-      return binding === undefined ? undefined : sessionDetailOf(binding.session.getSnapshot())
+      if (binding === undefined) return undefined
+      // The alpha session snapshot carries no chat view: the conversation
+      // nodes live in the uiConversation chat target, materialized only for
+      // opened sessions. Absent it, classification still has lastAgentError.
+      // (The chat target key and the session snapshot shape are surfaced
+      // through their owning packages' type merges; the structural casts keep
+      // this plugin independent of those augmentation orders.)
+      const chatTarget = (ctx.uiConversation.binding(binding) as {
+        target(key: string): { getSnapshot(): unknown }
+      }).target('chat')
+      const chat = chatTarget.getSnapshot() as ChatSnapshotLike | undefined
+      const session = binding.session.getSnapshot() as unknown as SessionSnapshot
+      return sessionDetailOf(session, chat)
     },
     titleOf: (id: SessionId) => ctx.sessions.list.getSnapshot().byId[id]?.displayTitle ?? id,
     settle: () => new Promise(resolve => setTimeout(resolve, SETTLE_MS)),
@@ -116,6 +139,28 @@ export function apply(ctx: ClientContext): void {
     engine.seed(ctx.sessions.list.getSnapshot())
     return unsubscribe
   }, 'dsh-session-notification: session watch')
+
+  // Pending interactions moved off the sessions list in the alpha: observe
+  // the uiSession pending map for question/approval edges instead.
+  const pendingFactsOf = (pending: SessionPendingInteractionSnapshot): Map<SessionId, PendingFacts> => {
+    const out = new Map<SessionId, PendingFacts>()
+    for (const [id, interaction] of pending) {
+      const kind = interaction.kind === 'approval'
+        ? 'approval' as const
+        : (interaction.kind === 'question' || interaction.kind === 'plan-review')
+          ? 'question' as const
+          : undefined
+      if (kind === undefined) continue
+      const questions = (interaction as unknown as { questions?: readonly { question?: string }[] }).questions
+      const tool = (interaction as unknown as { toolName?: string }).toolName
+      const detail = questions?.[0]?.question ?? tool ?? ''
+      out.set(id, { key: interaction.key, kind, detail })
+    }
+    return out
+  }
+  ctx.effect(() => ctx.uiSession.pendingInteractions.subscribe(() => {
+    engine.observePending(pendingFactsOf(ctx.uiSession.pendingInteractions.getSnapshot()))
+  }), 'dsh-session-notification: pending watch')
 
   /** Persist one top-level preference through the scope, mirroring optimistically. */
   const persist = (field: 'browserEnabled' | 'notifyCurrent' | 'soundEnabled' | 'volume', value: unknown): void => {
