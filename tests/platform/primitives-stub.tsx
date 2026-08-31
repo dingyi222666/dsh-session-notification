@@ -36,6 +36,21 @@ export function Menu({ open, anchor, items, selectedId, onSelect }: {
   )
 }
 
+/** Button stub: a plain native button (the official primitive is a token-
+ *  styled capsule; variant/size are visual only and irrelevant here). */
+export function Button({ variant, size, className, children, ...rest }: {
+  variant?: string
+  size?: string
+  className?: string | undefined
+  children?: ReactNode
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button type="button" className={className} {...rest}>
+      {children}
+    </button>
+  )
+}
+
 /** Icon stubs: the section only needs their presence. */
 export const IconAgentPresetOutline16 = () => null
 export const IconChevronDownOutline14 = () => null

@@ -14,7 +14,7 @@ import type {
   PropsLocale, PropsRuntime, PropsStore,
 } from '@deepseek-ai/dsh-client-ui-slots'
 import {
-  IconAgentPresetOutline16, IconCheckOutline16, IconChevronDownOutline14,
+  Button, IconAgentPresetOutline16, IconCheckOutline16, IconChevronDownOutline14,
   IconQuestionOutline14, IconWarningOutline16, Menu,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { NotificationsKey } from './locales.ts'
@@ -206,16 +206,16 @@ export function NotificationsSection({
           </div>
           <div className={css.rowActions}>
             {permission === 'granted' && settings.browserEnabled && (
-              <button type="button" className={css.actionButton} onClick={testBrowserNotification}>
+              <Button variant="outline" size="sm" onClick={testBrowserNotification}>
                 {t('test.send')}
-              </button>
+              </Button>
             )}
             {deniedLabel !== undefined && <span className={css.permissionState}>{deniedLabel}</span>}
             {permission === 'unsupported' && <span className={css.permissionState}>{t('permission.unsupported')}</span>}
             {permission === 'default' && (
-              <button type="button" className={css.actionButton} onClick={() => { void requestPermission() }}>
+              <Button variant="outline" size="sm" onClick={() => { void requestPermission() }}>
                 {t('permission.request')}
-              </button>
+              </Button>
             )}
             {settings.browserEnabled && permission !== 'granted' && (
               <span className={css.permissionState}>{t('permission.paused')}</span>
@@ -316,14 +316,14 @@ function TypeRow({ kind, Icon, title, desc, type, customUrl, t, onTypeChange, on
       </div>
       <div className={css.rowActions}>
         {customSelected && hasCustom && (
-          <button type="button" className={css.actionButton} onClick={() => { fileRef.current?.click() }}>
+          <Button variant="outline" size="sm" onClick={() => { fileRef.current?.click() }}>
             {t('custom.replace')}
-          </button>
+          </Button>
         )}
         {audible && (
-          <button type="button" className={css.actionButton} onClick={onTest}>
+          <Button variant="outline" size="sm" onClick={onTest}>
             {t('test.play')}
-          </button>
+          </Button>
         )}
         <SoundMenu value={type.sound} t={t} onSelect={handleSoundSelect} />
         <Switch on={type.enabled} label={title} onChange={(next) => { onTypeChange({ enabled: next }) }} />
