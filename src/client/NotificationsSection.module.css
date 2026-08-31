@@ -36,13 +36,14 @@
   flex-direction: column;
 }
 
-/* Flat hairline rows (not cards): the EnterBehaviorRow / GeneralSection idiom. */
+/* Flat hairline rows (not cards): the official Setting-Cell idiom
+   (LanguageRow / EnterBehaviorRow): gap 8, pad 16/0, hairline separator. */
 .row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 14px 0;
+  gap: 8px;
+  padding: 16px 0;
   border-bottom: 1px solid var(--dsw-alias-border-l2);
 }
 
@@ -60,13 +61,13 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .rowTitle {
   font-size: 14px;
   line-height: 22px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--dsw-alias-label-primary);
 }
 
@@ -147,19 +148,21 @@
   box-shadow: 0 0 0 2px var(--dsw-alias-border-l3);
 }
 
-/* Sound picker capsule (row-dense selector). */
+/* Sound picker selector pill — the official single-select row control
+   (LanguageRow / EnterBehaviorRow idiom): h36 r18 platform-fill pill with a
+   chevron, gap 12, text 14/22. */
 .selector {
-  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 14px;
-  background: transparent;
-  font-size: 12px;
-  line-height: 18px;
+  gap: 12px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 18px;
+  background: var(--dsw-alias-bg-module-platform);
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
   color: var(--dsw-alias-label-primary);
   cursor: pointer;
 }
@@ -169,7 +172,7 @@
 }
 
 .chevron {
-  color: var(--dsw-alias-label-tertiary);
+  flex: none;
 }
 
 /* Official switch: role=switch button with track + thumb. */
