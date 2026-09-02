@@ -52,7 +52,8 @@
     "watch": "tsdown --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "clean": "rm -rf lib"
+    "clean": "rm -rf lib",
+    "release": "tsx scripts/release.ts"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
@@ -79,6 +80,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tsdown": "^0.22.2",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
   },
