@@ -19,7 +19,7 @@ import { buildReleaseBody } from './release-body.ts'
 import { RELEASE_NOTES } from './release-notes.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
-const REPO = 'dsh-external/dsh-session-notification'
+const REPO = 'dingyi222666/dsh-session-notification'
 const MANIFEST = join(ROOT, 'package.json')
 
 function git(...args: string[]): string {
