@@ -32,6 +32,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
     useStore: (() => state) as unknown as NotificationsSectionProps['useStore'],
     setBrowserEnabled: vi.fn(async () => {}),
     setNotifyCurrent: vi.fn(),
+    setMainOnly: vi.fn(),
     setSoundEnabled: vi.fn(),
     setVolume: vi.fn(),
     setType: vi.fn(),
@@ -46,6 +47,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
   return props as unknown as {
     setBrowserEnabled: ReturnType<typeof vi.fn>
     setNotifyCurrent: ReturnType<typeof vi.fn>
+    setMainOnly: ReturnType<typeof vi.fn>
     setSoundEnabled: ReturnType<typeof vi.fn>
     setVolume: ReturnType<typeof vi.fn>
     setType: ReturnType<typeof vi.fn>
@@ -67,9 +69,9 @@ describe('NotificationsSection', () => {
     expect(screen.getByText(zh['type.permission.title'])).toBeTruthy()
   })
 
-  it('renders seven switches: browser, current-session, sound, and one per kind', () => {
+  it('renders eight switches: browser, current-session, main-only, sound, and one per kind', () => {
     renderSection(stateOf())
-    expect(screen.getAllByRole('switch')).toHaveLength(7)
+    expect(screen.getAllByRole('switch')).toHaveLength(8)
   })
 
   it('toggles the current-session alert switch through setNotifyCurrent', () => {
@@ -77,6 +79,13 @@ describe('NotificationsSection', () => {
     const switches = screen.getAllByRole('switch')
     fireEvent.click(switches[1]) // current-session row switch
     expect(callbacks.setNotifyCurrent).toHaveBeenCalledWith(true)
+  })
+
+  it('toggles the main-only switch through setMainOnly', () => {
+    const callbacks = renderSection(stateOf())
+    const switches = screen.getAllByRole('switch')
+    fireEvent.click(switches[2]) // main-only row switch
+    expect(callbacks.setMainOnly).toHaveBeenCalledWith(false)
   })
 
   it('renders the sound pickers with the current sound label', () => {
@@ -100,7 +109,7 @@ describe('NotificationsSection', () => {
   it('toggles a kind enable switch through setType', () => {
     const callbacks = renderSection(stateOf())
     const switches = screen.getAllByRole('switch')
-    fireEvent.click(switches[4]) // failed row switch
+    fireEvent.click(switches[5]) // failed row switch (0 browser, 1 current, 2 main-only, 3 sound, 4 completed)
     expect(callbacks.setType).toHaveBeenCalledWith('failed', { enabled: false })
   })
 

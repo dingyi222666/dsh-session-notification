@@ -78,6 +78,8 @@ export interface NotificationEnginePorts {
   titleOf: (sessionId: SessionId) => string
   /** Wait for trailing wire frames after a running edge (settle window). */
   settle: () => Promise<void>
+  /** Whether one session is a subagent (never the main session). */
+  isSubagent: (sessionId: SessionId) => boolean
   /** Deliver one classified event. */
   emit: (event: NotificationEvent) => void
 }
@@ -100,9 +102,35 @@ export class NotificationEngine {
   private readonly runs = new Map<SessionId, RunState>()
   private readonly settling = new Set<SessionId>()
   private readonly pendingKeys = new Map<SessionId, string>()
+  /** Only the main session alerts (subagents stay silent). Defaults on,
+   *  matching DEFAULT_NOTIFICATION_SETTINGS; wiring syncs the live value. */
+  private mainOnly = true
 
   /** @param ports - injected readers and sink. */
   constructor(private readonly ports: NotificationEnginePorts) {}
+
+  /** Update whether subagent sessions are silenced. */
+  setMainOnly(enabled: boolean): void {
+    this.mainOnly = enabled
+    // Turning main-only back on forgets every tracked subagent so a stale
+    // running edge can never fire for one after the switch.
+    if (enabled) this.forgetSubagents()
+  }
+
+  /** Whether one session should stay silent under the main-only filter. */
+  private silenced(id: SessionId): boolean {
+    return this.mainOnly && this.ports.isSubagent(id)
+  }
+
+  /** Drop tracking state for every subagent session (main-only was enabled). */
+  private forgetSubagents(): void {
+    for (const id of new Set([...this.prevRunning.keys(), ...this.runs.keys(), ...this.pendingKeys.keys()])) {
+      if (!this.ports.isSubagent(id)) continue
+      this.prevRunning.delete(id)
+      this.runs.delete(id)
+      this.pendingKeys.delete(id)
+    }
+  }
 
   /**
    * Process one sessions-list snapshot (called on every list change).
@@ -113,6 +141,14 @@ export class NotificationEngine {
     for (const summary of Object.values(sessions.byId)) {
       const id = summary.id
       seen.add(id)
+      if (this.silenced(id)) {
+        // Never track a silenced subagent; drop any state left from when the
+        // filter was off so no stale edge fires.
+        this.prevRunning.delete(id)
+        this.runs.delete(id)
+        this.pendingKeys.delete(id)
+        continue
+      }
       const prevRunning = this.prevRunning.get(id) ?? false
       if (prevRunning && !summary.running) {
         void this.settleRun(id)
@@ -139,6 +175,7 @@ export class NotificationEngine {
   seed(sessions: SessionListState): void {
     for (const summary of Object.values(sessions.byId)) {
       const id = summary.id
+      if (this.silenced(id)) continue
       this.prevRunning.set(id, summary.running)
       if (summary.running) this.armRun(id)
     }
@@ -152,6 +189,10 @@ export class NotificationEngine {
    */
   observePending(pending: ReadonlyMap<SessionId, PendingFacts>): void {
     for (const [id, facts] of pending) {
+      if (this.silenced(id)) {
+        this.pendingKeys.delete(id)
+        continue
+      }
       const prevKey = this.pendingKeys.get(id)
       if (prevKey === undefined || prevKey !== facts.key) {
         this.raise(facts.kind, id, facts.detail)
@@ -182,6 +223,12 @@ export class NotificationEngine {
       await this.ports.settle()
       // A newer run armed while settling will classify itself; skip the stale one.
       if (this.runs.has(id)) return
+      // The filter may have changed while settling (e.g. main-only re-enabled):
+      // never emit for a session that is now silenced.
+      if (this.silenced(id)) {
+        this.prevRunning.delete(id)
+        return
+      }
       const detail = this.ports.detailOf(id)
       const failed = detail !== undefined && (
         detail.maxTurnErrorSeq > run.baselineErrorSeq ||

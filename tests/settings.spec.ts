@@ -19,6 +19,16 @@ describe('resolveNotificationSettings', () => {
     expect(resolved.notifyCurrent).toBe(false)
   })
 
+  it('defaults to main-session-only notifications', () => {
+    const resolved = resolveNotificationSettings(undefined)
+    expect(resolved.mainOnly).toBe(true)
+  })
+
+  it('honors an explicit mainOnly override', () => {
+    const resolved = resolveNotificationSettings({ mainOnly: false })
+    expect(resolved.mainOnly).toBe(false)
+  })
+
   it('assigns the default four sounds to the four kinds', () => {
     const resolved = resolveNotificationSettings(undefined)
     expect(resolved.types.completed.sound).toBe('chime')

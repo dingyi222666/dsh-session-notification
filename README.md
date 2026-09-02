@@ -46,12 +46,15 @@ Beyond the four built-in sounds, each kind accepts **your own audio file** (mp3/
 
 Browser (system-level) notifications are **off by default**; turning the switch on asks for the browser's permission first (a user gesture). Once granted, a notification is shown when the event's session is not the one you are reading, or when the tab is in the background. Notifications carry the **page's own icon** (the favicon the harness serves). A completed session's notification carries its **final reply text** (the last assistant message). The Test notification button in the section sends one immediately to verify the channel once permission is granted. The session you are reading stays **quiet by default** — its own events don't interrupt you; flip the Alert for the current session toggle if you want it to alert too.
 
+**Main session only** is on by default: notifications come from the main session only, so a fan-out of parallel subagents never rings once per subagent. Turn it off if you want to hear from every subagent as well.
+
 ## The Notifications settings section
 
 The plugin registers a **Notifications** section in the settings panel (Settings ⚙ → Notifications):
 
 - **Browser notifications** master switch (+ permission state and an enable button),
 - **Alert for the current session** toggle (opt in to being alerted while reading that session),
+- **Main session only** toggle (default on: subagent sessions stay silent),
 - **Sound** master switch,
 - **Volume** slider (0–100%),
 - one row per notification kind: enable switch, custom-audio upload, sound picker (the official dropdown menu), and a Preview button,

@@ -34,6 +34,7 @@ function makePorts(overrides: Partial<NotificationEnginePorts> = {}): Notificati
     detailOf: () => undefined,
     titleOf: (id) => String(id),
     settle: () => Promise.resolve(),
+    isSubagent: () => false,
     emit: (event) => { events.push(event) },
     ...overrides,
     events,
@@ -180,6 +181,58 @@ describe('NotificationEngine', () => {
     await flush()
     // Reappearing session starts from a fresh prev: the run edge still fires.
     expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: '' }])
+  })
+
+  it('stays silent for subagents by default (main-only on)', async () => {
+    const ports = makePorts({
+      detailOf: () => detail(),
+      isSubagent: (id) => String(id) === 'sub',
+    })
+    const engine = new NotificationEngine(ports)
+    engine.seed(list({ main: summary('main', true), sub: summary('sub', true) }))
+    engine.observe(list({ main: summary('main', false), sub: summary('sub', false) }))
+    await flush()
+    // Only the main session completed; the subagent run stays silent.
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '' }])
+  })
+
+  it('does not raise pending edges for subagents while main-only is on', () => {
+    const ports = makePorts({ isSubagent: (id) => String(id) === 'sub' })
+    const engine = new NotificationEngine(ports)
+    engine.observePending(new Map([
+      pending('main', 'question', 'q1', '继续吗?'),
+      pending('sub', 'approval', 'a1', 'bash: run'),
+    ]))
+    expect(ports.events).toEqual([{ kind: 'question', sessionId: 'main', title: 'main', detail: '继续吗?' }])
+  })
+
+  it('alerts for subagents once main-only is turned off', async () => {
+    const ports = makePorts({
+      detailOf: () => detail(),
+      isSubagent: (id) => String(id) === 'sub',
+    })
+    const engine = new NotificationEngine(ports)
+    engine.setMainOnly(false)
+    engine.observe(list({ sub: summary('sub', true) }))
+    engine.observe(list({ sub: summary('sub', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'sub', title: 'sub', detail: '' }])
+  })
+
+  it('forgets tracked subagents when main-only is re-enabled mid-run', async () => {
+    const ports = makePorts({
+      detailOf: () => detail(),
+      isSubagent: (id) => String(id) === 'sub',
+    })
+    const engine = new NotificationEngine(ports)
+    engine.setMainOnly(false)
+    engine.observe(list({ sub: summary('sub', true) }))
+    // Re-enabling the filter forgets the tracked subagent: finishing now
+    // produces no event.
+    engine.setMainOnly(true)
+    engine.observe(list({ sub: summary('sub', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
   })
 })
 

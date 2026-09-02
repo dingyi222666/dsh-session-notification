@@ -38,6 +38,9 @@ export interface NotificationSettings {
   browserEnabled: boolean
   /** Whether events from the session you are currently reading also alert. */
   notifyCurrent: boolean
+  /** Only alert for the main session, never for subagents. When off, every
+   *  session (including parallel subagents) alerts. */
+  mainOnly: boolean
   /** Master switch for sound playback. */
   soundEnabled: boolean
   /** Master playback volume in [0, 1] (0–100%); the sound chain applies a
@@ -55,6 +58,9 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = Object.freeze
   // The session you are reading stays quiet by default; the toggle opts into
   // being alerted there too.
   notifyCurrent: false,
+  // Main-session only by default: a fan-out of parallel subagents would
+  // otherwise alert once per subagent. Turn it off to hear from them too.
+  mainOnly: true,
   soundEnabled: true,
   volume: 0.6,
   types: Object.freeze({
@@ -118,6 +124,8 @@ export function resolveNotificationSettings(raw: unknown): NotificationSettings 
       ? source.browserEnabled : DEFAULT_NOTIFICATION_SETTINGS.browserEnabled,
     notifyCurrent: typeof source.notifyCurrent === 'boolean'
       ? source.notifyCurrent : DEFAULT_NOTIFICATION_SETTINGS.notifyCurrent,
+    mainOnly: typeof source.mainOnly === 'boolean'
+      ? source.mainOnly : DEFAULT_NOTIFICATION_SETTINGS.mainOnly,
     soundEnabled: typeof source.soundEnabled === 'boolean'
       ? source.soundEnabled : DEFAULT_NOTIFICATION_SETTINGS.soundEnabled,
     volume,

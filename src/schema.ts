@@ -33,6 +33,7 @@ const typeSchema: z<PersistedTypeSettings> = z.object({
 export const NotificationSettingsSchema: z<PersistedNotificationSettings> = z.object({
   browserEnabled: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.browserEnabled),
   notifyCurrent: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.notifyCurrent),
+  mainOnly: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.mainOnly),
   soundEnabled: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.soundEnabled),
   volume: z.number().min(0).max(1).default(DEFAULT_NOTIFICATION_SETTINGS.volume),
   types: z.object({

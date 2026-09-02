@@ -90,7 +90,9 @@ export function apply(ctx: ClientContext): void {
 
   // Scope → renderer store mirror. The renderer binds its own store instance
   // and hands it to the inject factory; until the section mounts, adopt is a
-  // no-op (the inject factory performs the first sync on mount).
+  // no-op (the inject factory performs the first sync on mount). The engine's
+  // main-only filter is synced from the same subscription below, where the
+  // engine already exists.
   ctx.effect(() => scope.subscribe(() => { bound?.adopt(scope.getSnapshot()) }), 'dsh-session-notification: scope adoption')
 
   const player = new SoundPlayer(() => currentSettings().volume)
@@ -131,8 +133,18 @@ export function apply(ctx: ClientContext): void {
     },
     titleOf: (id: SessionId) => ctx.sessions.list.getSnapshot().byId[id]?.displayTitle ?? id,
     settle: () => new Promise(resolve => setTimeout(resolve, SETTLE_MS)),
+    // Subagents live in the same sessions list, flagged by their summary
+    // origin; the main-only filter silences them.
+    isSubagent: (id: SessionId) =>
+      ctx.sessions.list.getSnapshot().byId[id]?.origin === 'subagent',
     emit: (event) => { dispatcher.dispatch(event) },
   })
+  // Keep the engine's filter in lockstep with the durable preference.
+  engine.setMainOnly(currentSettings().mainOnly)
+  // Re-sync the filter on every scope change (including other tabs).
+  ctx.effect(() => scope.subscribe(() => {
+    engine.setMainOnly(currentSettings().mainOnly)
+  }), 'dsh-session-notification: main-only filter sync')
   ctx.effect(() => {
     const unsubscribe = ctx.sessions.list.subscribe(() => engine.observe(ctx.sessions.list.getSnapshot()))
     // Establish the baseline so pre-existing state raises nothing.
@@ -163,9 +175,10 @@ export function apply(ctx: ClientContext): void {
   }), 'dsh-session-notification: pending watch')
 
   /** Persist one top-level preference through the scope, mirroring optimistically. */
-  const persist = (field: 'browserEnabled' | 'notifyCurrent' | 'soundEnabled' | 'volume', value: unknown): void => {
+  const persist = (field: 'browserEnabled' | 'notifyCurrent' | 'mainOnly' | 'soundEnabled' | 'volume', value: unknown): void => {
     if (field === 'browserEnabled') bound?.setBrowserEnabled(value as boolean)
     else if (field === 'notifyCurrent') bound?.setNotifyCurrent(value as boolean)
+    else if (field === 'mainOnly') bound?.setMainOnly(value as boolean)
     else if (field === 'soundEnabled') bound?.setSoundEnabled(value as boolean)
     else bound?.setVolume(value as number)
     void scope.set(field, value)
@@ -195,6 +208,7 @@ export function apply(ctx: ClientContext): void {
         persist('browserEnabled', enabled)
       },
       setNotifyCurrent: (enabled) => { persist('notifyCurrent', enabled) },
+      setMainOnly: (enabled) => { persist('mainOnly', enabled) },
       setSoundEnabled: (enabled) => { persist('soundEnabled', enabled) },
       setVolume: (volume) => { persist('volume', Math.min(1, Math.max(0, volume))) },
       setType: (kind, patch) => { persistType(kind, patch) },
