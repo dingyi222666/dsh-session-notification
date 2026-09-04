@@ -19,7 +19,11 @@
  * `packages/host/apiproxy` or any other host package.
  */
 import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { SessionId } from '@deepseek-ai/dsh-client-connection/client'
+// Type-only: the SlotRegistry service merge (ctx.slots) — dsh 0.1.3 merged it
+// through ui-renderer's client face (dsh-client-runtime was dissolved).
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 // Type-only: the settings surface's slot-name augmentation, which types the
 // `settings.section` seat this plugin registers (a side effect of importing
 // the face is the ctx.settingsScope Context merge, which the plugin no
@@ -27,7 +31,7 @@ import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/c
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 // Type-only: the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
-// Type-only: the alpha sessions service (ctx.sessions) and the chat/pending
+// Type-only: the sessions service (ctx.sessions) and the chat/pending
 // surfaces the engine reads (ctx.uiConversation / ctx.uiSession).
 import type {} from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'

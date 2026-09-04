@@ -4,15 +4,20 @@
  * The notification preferences are owned end to end by this plugin and
  * persist in the browser (localStorage), so the plugin works against a
  * pristine harness — no host-side settings-namespace exposure, no change to
- * `packages/host/apiproxy` or any other host package. The scope implements
- * the runtime `SettingsScope` contract (snapshot + subscribe + set/unset) so
- * the apply world and the section store keep working unchanged; reads resolve
- * through the same `resolveNotificationSettings` decoder the host document
- * path used, so hand-edited or malformed storage degrades to the defaults.
+ * `packages/host/apiproxy` or any other host package. The scope implements the
+ * client `SettingsScope` contract from `dsh-client-ui-settings` (snapshot +
+ * subscribe + mutate/set/unset — dsh 0.1.3 moved the contract off the deleted
+ * dsh-client-runtime and added `mutate`) so the apply world and the section
+ * store keep working unchanged; reads resolve through the same
+ * `resolveNotificationSettings` decoder the host document path used, so
+ * hand-edited or malformed storage degrades to the defaults.
  */
 import type {
   SettingsScope, SettingsScopeSnapshot,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@deepseek-ai/dsh-client-ui-settings/client'
+// The scope contract's mutation ops (a wire view re-exported by api-remotes);
+// type-only, so no runtime dependency on the settings transport.
+import type { SettingsPathOpView } from '@deepseek-ai/dsh-api-remotes/client'
 import {
   DEFAULT_NOTIFICATION_SETTINGS, NOTIFICATIONS_NS, resolveNotificationSettings,
   type NotificationSettings,
@@ -95,6 +100,25 @@ export function createLocalSettingsScope(): SettingsScope<NotificationSettings> 
       listeners.add(listener)
       return () => { listeners.delete(listener) }
     },
+    // The local scope is its own document: fold every op over the stored
+    // value (deep set/unset), then validate through the same decoder as any
+    // other write so malformed payloads degrade to the defaults.
+    async mutate(ops: readonly SettingsPathOpView[], _expectedRevision?: number): Promise<void> {
+      const next = JSON.parse(JSON.stringify(value)) as Record<string, unknown>
+      for (const op of ops) {
+        if (op.path.length === 0) {
+          // The empty path addresses the section root.
+          if (op.op === 'set') {
+            for (const key of Object.keys(next)) delete next[key]
+            Object.assign(next, op.value)
+          }
+          continue
+        }
+        if (op.op === 'set') deepSet(next, op.path, op.value)
+        else deepUnset(next, op.path)
+      }
+      commit(resolveNotificationSettings(next), true)
+    },
     async set(field: string, fieldValue: unknown): Promise<void> {
       commit(resolveNotificationSettings({ ...value, [field]: fieldValue }), true)
     },
@@ -103,4 +127,32 @@ export function createLocalSettingsScope(): SettingsScope<NotificationSettings> 
       commit(resolveNotificationSettings({ ...value, [field]: fallback }), true)
     },
   }
+}
+
+/** Walk one path and assign the value at its end (creating intermediates). */
+function deepSet(root: Record<string, unknown>, path: readonly string[], value: unknown): void {
+  let cursor: unknown = root
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const segment = path[index]
+    const next = (cursor as Record<string, unknown>)[segment]
+    if (typeof next !== 'object' || next === null || Array.isArray(next)) {
+      const created: Record<string, unknown> = {}
+      ;(cursor as Record<string, unknown>)[segment] = created
+      cursor = created
+    } else {
+      cursor = next
+    }
+  }
+  ;(cursor as Record<string, unknown>)[path[path.length - 1]] = value
+}
+
+/** Walk one path and delete the value at its end (no-op when absent). */
+function deepUnset(root: Record<string, unknown>, path: readonly string[]): void {
+  let cursor: unknown = root
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const next = (cursor as Record<string, unknown>)[path[index]]
+    if (typeof next !== 'object' || next === null || Array.isArray(next)) return
+    cursor = next
+  }
+  delete (cursor as Record<string, unknown>)[path[path.length - 1]]
 }

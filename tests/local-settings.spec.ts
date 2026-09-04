@@ -76,4 +76,41 @@ describe('createLocalSettingsScope', () => {
     await scope.unset('volume')
     expect(scope.getSnapshot().value?.volume).toBe(DEFAULT_NOTIFICATION_SETTINGS.volume)
   })
+
+  it('mutate applies a path-addressed set and persists it', async () => {
+    const scope = createLocalSettingsScope()
+    await scope.mutate([{ op: 'set', path: ['volume'], value: 0.4 }])
+    expect(scope.getSnapshot().value?.volume).toBe(0.4)
+    const again = createLocalSettingsScope()
+    expect(again.getSnapshot().value?.volume).toBe(0.4)
+  })
+
+  it('mutate applies a nested per-kind patch', async () => {
+    const scope = createLocalSettingsScope()
+    await scope.mutate([{ op: 'set', path: ['types', 'failed', 'sound'], value: 'alert' }])
+    expect(scope.getSnapshot().value?.types.failed.sound).toBe('alert')
+    expect(scope.getSnapshot().value?.types.failed.enabled).toBe(true)
+    expect(scope.getSnapshot().value?.types.completed).toEqual(DEFAULT_NOTIFICATION_SETTINGS.types.completed)
+  })
+
+  it('mutate unset restores the field default', async () => {
+    const scope = createLocalSettingsScope()
+    await scope.set('volume', 0.3)
+    await scope.mutate([{ op: 'unset', path: ['volume'] }])
+    expect(scope.getSnapshot().value?.volume).toBe(DEFAULT_NOTIFICATION_SETTINGS.volume)
+  })
+
+  it('mutate folds several ops into one persisted commit and one notification', async () => {
+    const scope = createLocalSettingsScope()
+    const listener = vi.fn()
+    scope.subscribe(listener)
+    await scope.mutate([
+      { op: 'set', path: ['volume'], value: 0.2 },
+      { op: 'set', path: ['soundEnabled'], value: false },
+    ])
+    expect(listener).toHaveBeenCalledTimes(1)
+    const again = createLocalSettingsScope()
+    expect(again.getSnapshot().value?.volume).toBe(0.2)
+    expect(again.getSnapshot().value?.soundEnabled).toBe(false)
+  })
 })

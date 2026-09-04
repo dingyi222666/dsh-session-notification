@@ -6,17 +6,23 @@
  * dependency-injected and DOM-free so the classification logic runs under
  * plain vitest; the browser wiring lives in `index.ts`.
  *
- * dsh 0.1.2-alpha.2 data model: the session snapshot no longer carries the
- * chat view (`chat.nodes`) or `pendingInteraction` — the chat view comes from
+ * dsh 0.1.3-alpha.1 data model: the session snapshot still carries no chat
+ * view or pending interaction — the chat view comes from
  * `uiConversation.binding(binding).target('chat')` and pending interactions
- * from `uiSession.pendingInteractions`, so the engine reads those two
- * surfaces instead of the old single list snapshot.
+ * from `uiSession.pendingInteractions`. The engine's session types now come
+ * from the api-session-controller client (dsh-client-runtime was dissolved);
+ * `AssistantBlock`/`TurnErrorNode` live with the ui-conversation records.
  */
 import type { SessionId } from '@deepseek-ai/dsh-client-connection/client'
-import type { SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
 import type {
-  AssistantBlock, SessionListState, TurnErrorNode,
-} from '@deepseek-ai/dsh-client-runtime/client'
+  SessionListState, SessionSnapshot,
+} from '@deepseek-ai/dsh-api-session-controller/client'
+// dsh 0.1.3: the runtime package is gone; the chat-view node payload types
+// (assistant text blocks and turn-error records) live with the conversation
+// records in ui-conversation (re-exported by ui-chat's snapshot contract).
+import type {
+  AssistantBlock, TurnErrorNode,
+} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 
 /** One selectable notification kind (re-export for the settings rows). */

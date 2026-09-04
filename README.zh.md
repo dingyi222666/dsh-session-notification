@@ -15,7 +15,7 @@
 ## 安装
 
 ```sh
-# 从 npm 安装（需要 dsh >= 0.1.2-alpha.5）
+# 从 npm 安装（需要 dsh >= 0.1.3-alpha.1）
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web
@@ -75,6 +75,7 @@ dsh web
 - `yarn run build` —— 构建浏览器包（`lib/client.js`）与 Node 半区（`lib/index.js` / `lib/invariant.js`）。
 - `src/client/notification-service.ts` —— 引擎（事件判定）与分发器（开关/音效/通知门控）；`src/client/settings-store.ts` —— 设置栏桥接；`src/client/NotificationsSection.tsx` —— 设置栏 UI；`src/client/sounds.ts` 与 `src/client/custom-audio.ts` —— 内置与自定义音效。
 - `yarn test` —— 行为测试；`yarn run typecheck` —— 类型门禁。
+- dsh 0.1.3-alpha.1：`@deepseek-ai/dsh-*` 类型经 tsconfig paths 从同级 dsh 检出（`../test-dingyi222666`）解析，待 0.1.3-alpha.1 各包发布到 npm 后移除（devDependencies 只安装最近发布的版本，用于构建工具链）。
 - Node 半区改动需要重启 `dsh web`；浏览器包改动重新 `yarn run build` 即可（`--dev` 模式会自动热更新）。
 
 ## 已知限制

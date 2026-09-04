@@ -6,7 +6,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { SessionId } from '@deepseek-ai/dsh-client-connection/client'
-import type { SessionListState } from '@deepseek-ai/dsh-client-runtime/client'
+// dsh 0.1.3: session-list types live in the api-session-controller client.
+import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import {
   NotificationEngine, truncateDetail,
   type NotificationEnginePorts, type NotificationEvent, type PendingFacts, type SessionDetail,
@@ -24,8 +25,13 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
   return { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, finalText: '', ...overrides }
 }
 
-function pending(sessionId: string, kind: PendingFacts['kind'], key = 'k1', text = ''): [string, PendingFacts] {
-  return [sessionId, { key, kind, detail: text }]
+function pending(sessionId: string, kind: PendingFacts['kind'], key = 'k1', text = ''): [SessionId, PendingFacts] {
+  return [sessionId as SessionId, { key, kind, detail: text }]
+}
+
+/** One pending snapshot keyed by branded session ids (SessionId is branded in 0.1.3). */
+function pendingMap(entries: ReadonlyArray<[SessionId, PendingFacts]>): ReadonlyMap<SessionId, PendingFacts> {
+  return new Map(entries)
 }
 
 function makePorts(overrides: Partial<NotificationEnginePorts> = {}): NotificationEnginePorts & { events: NotificationEvent[] } {
@@ -115,22 +121,22 @@ describe('NotificationEngine', () => {
   it('raises question when a pending question interaction arrives', () => {
     const ports = makePorts()
     const engine = new NotificationEngine(ports)
-    engine.observePending(new Map([pending('a', 'question', 'q1', '继续吗?')]))
+    engine.observePending(pendingMap([pending('a', 'question', 'q1', '继续吗?')]))
     expect(ports.events).toEqual([{ kind: 'question', sessionId: 'a', title: 'a', detail: '继续吗?' }])
   })
 
   it('raises permission when a pending approval interaction arrives', () => {
     const ports = makePorts()
     const engine = new NotificationEngine(ports)
-    engine.observePending(new Map([pending('a', 'approval', 'a1', 'bash：run a command')]))
+    engine.observePending(pendingMap([pending('a', 'approval', 'a1', 'bash：run a command')]))
     expect(ports.events).toEqual([{ kind: 'permission', sessionId: 'a', title: 'a', detail: 'bash：run a command' }])
   })
 
   it('re-raises when the interaction is replaced with a new key', () => {
     const ports = makePorts()
     const engine = new NotificationEngine(ports)
-    engine.observePending(new Map([pending('a', 'question', 'q1')]))
-    engine.observePending(new Map([pending('a', 'question', 'q2')]))
+    engine.observePending(pendingMap([pending('a', 'question', 'q1')]))
+    engine.observePending(pendingMap([pending('a', 'question', 'q2')]))
     expect(ports.events).toEqual([
       { kind: 'question', sessionId: 'a', title: 'a', detail: '' },
       { kind: 'question', sessionId: 'a', title: 'a', detail: '' },
@@ -140,8 +146,8 @@ describe('NotificationEngine', () => {
   it('raises again when a pending kind switches', () => {
     const ports = makePorts()
     const engine = new NotificationEngine(ports)
-    engine.observePending(new Map([pending('a', 'question', 'q1')]))
-    engine.observePending(new Map([pending('a', 'approval', 'a2')]))
+    engine.observePending(pendingMap([pending('a', 'question', 'q1')]))
+    engine.observePending(pendingMap([pending('a', 'approval', 'a2')]))
     expect(ports.events).toEqual([
       { kind: 'question', sessionId: 'a', title: 'a', detail: '' },
       { kind: 'permission', sessionId: 'a', title: 'a', detail: '' },
@@ -151,8 +157,8 @@ describe('NotificationEngine', () => {
   it('raises nothing when a pending interaction leaves the map', () => {
     const ports = makePorts()
     const engine = new NotificationEngine(ports)
-    engine.observePending(new Map([pending('a', 'question', 'q1')]))
-    engine.observePending(new Map())
+    engine.observePending(pendingMap([pending('a', 'question', 'q1')]))
+    engine.observePending(pendingMap([]))
     expect(ports.events).toEqual([{ kind: 'question', sessionId: 'a', title: 'a', detail: '' }])
   })
 

@@ -7,7 +7,9 @@
  * reads go through `useStore`.
  */
 import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
-import type { SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
+// dsh 0.1.3: the settings-scope contract lives in ui-settings' client face
+// (dsh-client-runtime was dissolved).
+import type { SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
   type NotificationSettings, type NotificationType, type NotificationTypeSettings,

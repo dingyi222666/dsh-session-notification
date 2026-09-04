@@ -8,8 +8,9 @@
  */
 import type { Context } from '@deepseek-ai/cordis'
 // Type-only: the settings service's Context merge (ctx.settings). The
-// register API brands the namespace string itself (0.1.2-alpha.2 dropped the
-// settingsNamespace() helper), so the literal is passed straight through.
+// register() generic brands the namespace through its literal type constraint
+// (dsh 0.1.3-alpha.1 keeps the constraint signature), so the const literal
+// is passed straight through.
 import type {} from '@deepseek-ai/dsh-settings'
 import { NOTIFICATIONS_NS } from './settings.ts'
 import { NotificationSettingsSchema } from './schema.ts'

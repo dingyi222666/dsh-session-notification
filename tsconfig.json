@@ -9,14 +9,126 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "ignoreDeprecations": "6.0",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    // dsh 0.1.3-alpha.1 @deepseek-ai types resolve from the sibling dsh
+    // checkout (../test-dingyi222666, built libs) until those versions land on
+    // npm; drop these mappings when devDependencies can install them.
+    "paths": {
+      "@deepseek-ai/dsh-api-session-controller": [
+        "../test-dingyi222666/packages/api/session-controller/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-session-controller/types": [
+        "../test-dingyi222666/packages/api/session-controller/lib/types/types.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-session-controller/remote-events": [
+        "../test-dingyi222666/packages/api/session-controller/lib/types/remote-events.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-session-controller/client": [
+        "../test-dingyi222666/packages/api/session-controller/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-session-controller/typert": [
+        "../test-dingyi222666/packages/api/session-controller/lib/typert.host.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-session-controller/remote": [
+        "../test-dingyi222666/packages/api/session-controller/lib/typert.remote-client.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-remotes": [
+        "../test-dingyi222666/packages/api/remotes/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-remotes/client": [
+        "../test-dingyi222666/packages/api/remotes/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-remotes/types": [
+        "../test-dingyi222666/packages/api/remotes/lib/types/types.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-connection": [
+        "../test-dingyi222666/packages/client/connection/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-connection/client": [
+        "../test-dingyi222666/packages/client/connection/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-locale": [
+        "../test-dingyi222666/packages/client/locale/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-locale/client": [
+        "../test-dingyi222666/packages/client/locale/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-store": [
+        "../test-dingyi222666/packages/client/store/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-conversation": [
+        "../test-dingyi222666/packages/client/ui-conversation/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-conversation/client": [
+        "../test-dingyi222666/packages/client/ui-conversation/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-primitives": [
+        "../test-dingyi222666/packages/client/ui-primitives/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-renderer": [
+        "../test-dingyi222666/packages/client/ui-renderer/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-renderer/invariant": [
+        "../test-dingyi222666/packages/client/ui-renderer/lib/types/invariant.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-renderer/client": [
+        "../test-dingyi222666/packages/client/ui-renderer/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-session": [
+        "../test-dingyi222666/packages/client/ui-session/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-session/client": [
+        "../test-dingyi222666/packages/client/ui-session/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-settings": [
+        "../test-dingyi222666/packages/client/ui-settings/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-settings/client": [
+        "../test-dingyi222666/packages/client/ui-settings/lib/types/client/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-client-ui-slots": [
+        "../test-dingyi222666/packages/client/ui-slots/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-invariants": [
+        "../test-dingyi222666/packages/runtime-diagnostics/invariants/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-session": [
+        "../test-dingyi222666/packages/core/session/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-session/invariant": [
+        "../test-dingyi222666/packages/core/session/lib/types/invariant.d.ts"
+      ],
+      "@deepseek-ai/dsh-session/types": [
+        "../test-dingyi222666/packages/core/session/lib/types/types.d.ts"
+      ],
+      "@deepseek-ai/dsh-session/surface": [
+        "../test-dingyi222666/packages/core/session/lib/types/surface.d.ts"
+      ],
+      "@deepseek-ai/dsh-settings": [
+        "../test-dingyi222666/packages/settings/settings/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-settings/invariant": [
+        "../test-dingyi222666/packages/settings/settings/lib/types/invariant.d.ts"
+      ],
+      "@deepseek-ai/dsh-settings/types": [
+        "../test-dingyi222666/packages/settings/settings/lib/types/types.d.ts"
+      ],
+      "@deepseek-ai/cordis": [
+        "../test-dingyi222666/vendor/cordis/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/schemastery": [
+        "../test-dingyi222666/vendor/schemastery/lib/types/index.d.ts"
+      ]
+    }
   },
   "include": [
     "src",

@@ -87,4 +87,11 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
     ],
     fixes: [],
   },
+  '0.1.9': {
+    features: [],
+    fixes: [
+      '- **harness 0.1.3-alpha.1 适配**: dsh-client-runtime 已解散——会话/对话/待交互类型改从 api-session-controller、ui-conversation、ui-session 客户端解析;客户端注入种子更新(按实际消费的服务列 provider 包、移除 runtime),删除失效的 dshClient 旧键',
+      '- **设置作用域契约**: SettingsScope 契约迁至 dsh-client-ui-settings(client 面新增 mutate);本地偏好作用域补齐 mutate(路径化 set/unset),新增相应单测;宿主半区 settings.register 在 0.1.3-alpha.1 类型下原样通过',
+    ],
+  },
 }
