@@ -93,6 +93,10 @@ const args = [
   '--title', tag,
   '--notes-file', notesFile,
 ]
+// Prerelease line (e.g. an alpha-track adapter): pass --prerelease on the
+// command line so the GitHub release is not advertised as stable. Nothing
+// here ever touches the npm registry.
+if (process.argv.includes('--prerelease')) args.push('--prerelease')
 console.log(`release: creating ${tag} (${commits.length} commits)`)
 const result = spawnSync('gh', args, { cwd: ROOT, encoding: 'utf8' })
 if (result.status !== 0) {
