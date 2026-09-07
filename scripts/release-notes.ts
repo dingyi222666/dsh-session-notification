@@ -94,4 +94,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **设置作用域契约**: SettingsScope 契约迁至 dsh-client-ui-settings(client 面新增 mutate);本地偏好作用域补齐 mutate(路径化 set/unset),新增相应单测;宿主半区 settings.register 在 0.1.3-alpha.1 类型下原样通过',
     ],
   },
+  '0.1.10': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.1.3-alpha.2**: @deepseek-ai/dsh-* 依赖升到 ^0.1.3-alpha.2(npm 已发布);tsconfig 的本地检出路径映射全部移除,类型恢复从 node_modules 解析;alpha.1→alpha.2 的差异(连接恢复配置、会话事件校验等)不影响本插件的 API 面,代码零改动',
+    ],
+  },
 }

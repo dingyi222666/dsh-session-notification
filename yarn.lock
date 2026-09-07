@@ -123,40 +123,57 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-api-session-controller@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-api-session-controller@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-api-remotes@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-api-remotes@npm:0.1.3-alpha.2"
   dependencies:
-    "@deepseek-ai/dsh-brand": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-deque": "npm:^0.1.2-alpha.5"
+    "@deepseek-ai/dsh-deque": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-session": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-util-values": "npm:^0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+    "@deepseek-ai/dsh-scope": ^0.1.3-alpha.2
+  checksum: 10c0/b9edff9b58ca5852a1904711106f6c2ddf368bdbf71394e69294c6b33df48a71aaa8b814240e6b0f146f91d5ffa1af4435a0cc2cecf9f2194d2679e733144a35
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-api-session-controller@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-api-session-controller@npm:0.1.3-alpha.2"
+  dependencies:
+    "@deepseek-ai/dsh-brand": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-deque": "npm:^0.1.3-alpha.2"
     "@deepseek-ai/schemastery": "npm:^3.18.2"
     zod: "npm:^4.4.3"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-    "@deepseek-ai/dsh-agent": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-agent-default-model": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-agent-presets": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-api-gateway": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-attachment": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-client-connection": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-file-reference": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-jobs": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-llm": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-native-command": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-scope": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-session": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-session-persistence": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-session-projection": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-session-projection-cache": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-session-query": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-session-title": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-skill": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-subagent": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-typert-protocol": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-typert-registry": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-util-time": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-util-workspace-path": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-workspace": ^0.1.2-alpha.5
+    "@deepseek-ai/dsh-agent": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-agent-default-model": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-agent-presets": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-api-gateway": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-attachment": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-client-connection": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-client-file-upload": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-commands": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-file-reference": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-jobs": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-llm": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-native-command": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-scope": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-session": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-session-persistence": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-session-projection": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-session-projection-cache": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-session-query": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-session-title": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-skill": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-subagent": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-typert-protocol": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-typert-registry": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-util-time": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-util-values": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-util-workspace-path": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-workspace": ^0.1.3-alpha.2
   peerDependenciesMeta:
     "@deepseek-ai/dsh-jobs":
       optional: true
@@ -164,58 +181,58 @@ __metadata:
       optional: true
     "@deepseek-ai/dsh-session-projection-cache":
       optional: true
-  checksum: 10c0/0d17dd7c8464b77c2cba15b76f8be13ee3820f48a826d702789c8eb25b7bfb946465c68b56cb0fd62631369035c0bd8a939d985eb332d56608d6abc959cd4885
+  checksum: 10c0/22989bd5aac09898a251a9a0b479fab215bc0f22c68a4c0cb5271e60e18e71cb022c624d5643c50496d872025e7b9cac66c0e19f649ebd763ddf7fc29e0b807f
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-brand@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-brand@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-brand@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-brand@npm:0.1.3-alpha.2"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/7adad92de06ab6fbd285d308ef1f182f9ab92ec41a3a771cf9b9720b5c54e08f11327492b08a17a584b6538160090a709f02f0e9bff7d429358f9db80d5057a7
+  checksum: 10c0/79fa9fea2ebb7dec261de108eae14d962901f9c0a1299693566fea36d250d5cfd80c87cd0bb812c599032885c271d938b48986a1ae2c7d0eb1c8cfd1519b835a
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-connection@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-connection@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-connection@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-connection@npm:0.1.3-alpha.2"
   dependencies:
-    "@deepseek-ai/dsh-credentials": "npm:^0.1.2-alpha.5"
+    "@deepseek-ai/dsh-credentials": "npm:^0.1.3-alpha.2"
     "@deepseek-ai/schemastery": "npm:^3.18.2"
     zod: "npm:^4.4.3"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/191ae0320fdfe4b8e719cbd60d4bfbdb06ea942415039ec55eecbda9af44cfea119f15a40c1ea022857a5edbf7d74afee683d9fda38583d5eee99665473a7a85
+  checksum: 10c0/ddcbcc86fb2219a7ce99f364ac0fcf48b509c80ff776fcc451c6a47a094ed2be3b891277dcd4c12eaf2f4be0d00c54eca63e9a1254e919b2e05158cbfa689031
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-locale@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-locale@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-locale@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-locale@npm:0.1.3-alpha.2"
   dependencies:
     "@deepseek-ai/schemastery": "npm:^3.18.2"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/cc471aa68b3bc8523940eb11c256af8254bf5ca745920c21cc1938eee814d091446747c3a031e6a8dea1d6cada00de90537d0caa128ceaf0137c250a8a24fe84
+  checksum: 10c0/bc5f252f54c437255fba5992815fd4cd93fa736d7af9e330e30576212e5a80fde0570662df8c46e130f5f0b598589176757e6aad59fd43c3d64e620d0297428e
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-store@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-store@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-store@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-store@npm:0.1.3-alpha.2"
   dependencies:
     immer: "npm:^10.1.1"
     zustand: "npm:~4.4.7"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/9958c6e8678543f31289ca735d65829ed341309fab3bc049edc25127f79f195c828124301fcf9330353de7cfdc2fd60cd31d766a4c6b165288ab62d364c8222f
+  checksum: 10c0/45695a68529937cb552f36abb33042ab220049fc00f428483266a0cf752a20be5b8b381e9b1c1ebc9db1638ac4c779ed9d0ec4f144faa8373a6dd6e150aa685a
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-ui-conversation@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-ui-conversation@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-ui-conversation@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-ui-conversation@npm:0.1.3-alpha.2"
   dependencies:
     "@deepseek-ai/schemastery": "npm:^3.18.2"
     "@lexical/history": "npm:^0.49.0"
@@ -226,13 +243,13 @@ __metadata:
     lexical: "npm:^0.49.0"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/fcaf50f7b1cfd6b77dc66aa0df336a23296dd1198ce7ecd224e64d9bc9f0e83a6435e702bcd2fb23e9dfdbd44a1eb116bbb26b442d5cc83d9fd75b888dbdfd4a
+  checksum: 10c0/28336819fecc76883e087b36bbb46a59457c742403b655eecbbbf71474a2db3e2a23774f1bbc8b6ba2b4bf01fa083803d2ef35b22f8ccbbbbff9b2015bcb2ffd
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-ui-primitives@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-ui-primitives@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-ui-primitives@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-ui-primitives@npm:0.1.3-alpha.2"
   dependencies:
     "@shikijs/langs": "npm:^4.3.1"
     "@types/mdast": "npm:^4.0.4"
@@ -256,90 +273,159 @@ __metadata:
     shiki: "npm:^4.3.1"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/46d11179b0b5ac358051e1133c95c877b6459aa0a0ec93d9667eafbe14d5bef8f6444552432074356a61b6f43a35c6c7c17d881d40fb982b82b0eb3803ad6245
+  checksum: 10c0/d0e75e49e54286df8fe3507e9e9497df2870ba2bd163fdae382fe8991dc7efe47af78dc475470dcda4005e0cbce4d5ce6670efee6416d92c22596aaa8d2dc5ea
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-client-ui-session@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-ui-session@npm:0.1.2-alpha.5"
-  peerDependencies:
-    "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/6f72f414f056d369829f402cfd0b99282931516b83d5b2c6e70773e635d260827baaa4895a09a3008ca0fcd78f24dde0e76ff1047027d432c72cad84d6e9ab82
-  languageName: node
-  linkType: hard
-
-"@deepseek-ai/dsh-client-ui-settings@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-ui-settings@npm:0.1.2-alpha.5"
-  peerDependencies:
-    "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/db0e8f587ae5c8d36b776202b1e002f046ef5171b24dc21a712f46774d444854a450da6435e36f14bbd0040f9b1f26286edf22a6383cb9fcbc7b9a68af0ef567
-  languageName: node
-  linkType: hard
-
-"@deepseek-ai/dsh-client-ui-slots@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-client-ui-slots@npm:0.1.2-alpha.5"
-  peerDependencies:
-    "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/3a833d1e170de168e66f3f536519beed23b017af094ddc02d83a52260f9e2a93242fe7b2e992f427cd9bc6f1743f880399bed81c841bd3ba4963530a815863ac
-  languageName: node
-  linkType: hard
-
-"@deepseek-ai/dsh-credentials@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-credentials@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-ui-renderer@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-ui-renderer@npm:0.1.3-alpha.2"
   dependencies:
-    "@deepseek-ai/dsh-brand": "npm:^0.1.2-alpha.5"
+    use-sync-external-store: "npm:1.2.0"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-    "@deepseek-ai/dsh-invariants": ^0.1.2-alpha.5
-  checksum: 10c0/5eea1472544fb66bb69ce27d1aeb1e8679986c76c218dfb4f7204fa6a70a758c944aade1782c24dd3ba5927a54fdec4e34f7fb1a73d3627ef888eca67b6ded79
+  checksum: 10c0/60e2b813df9bdfa4c3d0868f6a0cfb45e8295cb87c963e3932c7a13f18e27eedccd293628fcd41215e1e92b945921a6f3b3aa0b788cbdf9bd61eafb376773713
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-deque@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-deque@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-ui-session@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-ui-session@npm:0.1.3-alpha.2"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/7eb03c3e29ed46602fa49ed9ad6387f2c078d76ea53e18f87d8852308ebb9477d403e4190504a10993782a9cdb566e7e2f1f129af75cb150ef7ab28c14a7a537
+  checksum: 10c0/eee830eca259a792818cbdc094522420ed9da92c31c6f704e6c8f14463d33c4312c2e9ea6ca909186f45851369da3670126f1cd2f1ad85d8f76714a843467462
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-invariants@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-invariants@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-client-ui-settings@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-ui-settings@npm:0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+  checksum: 10c0/1405ee543d048e25d60b4cdec8a29021575e5437d0c5e6ae12ba046602937a811eab168eb92c14296784542861ea616c213504c73fe2fd8ab71169109fc0c7b0
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-client-ui-slots@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-client-ui-slots@npm:0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+  checksum: 10c0/96810cff77c3522ca992219e5c584f53f34f85d8911b2e9af31e11616432915ea00327a9c732738f9e034786195cee3e522f6fedd757040bd332c809719c8cab
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-credentials@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-credentials@npm:0.1.3-alpha.2"
+  dependencies:
+    "@deepseek-ai/dsh-brand": "npm:^0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+    "@deepseek-ai/dsh-invariants": ^0.1.3-alpha.2
+  checksum: 10c0/2bea9c9d594b46e00d6e4f100f072927eefcc8168e67d1df6ada3f232ec8915f4177c833ce2e4f4a8c70f2fd518235911e694743ad1925eea5315fed0022fb6c
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-deque@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-deque@npm:0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+  checksum: 10c0/918671a179fd31c344a549c5976fb673bd8adc9fd98eed6d46773cfb3994fc60beefd7bb89fc97ea92c42ffa92fdcd6457913bbcd8fb45197f91f305fe51f8df
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-invariants@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-invariants@npm:0.1.3-alpha.2"
   dependencies:
     "@deepseek-ai/schemastery": "npm:^3.18.2"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/6047ef636c5add90e7765b5ac82a7b8bd58aa5f41a0be053d866aaa23b37ca245581db588c968df16472d2f842017082d022eca089c50c38ffde07e293fca5ed
+  checksum: 10c0/0fadc4e70fe4f8a6fa93cd3a3c170c9943ba46cf2f9f0d4543095e8c1d35d11c3d7e408092f93d65b35b19f3b30b6a136664f3567b420b4e57cedecf979b46fc
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-settings@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-settings@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-llm@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-llm@npm:0.1.3-alpha.2"
   dependencies:
-    "@deepseek-ai/dsh-util-values": "npm:^0.1.2-alpha.5"
+    "@deepseek-ai/dsh-brand": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-timeout": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-typert-protocol": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-util-crypto": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-util-values": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/schemastery": "npm:^3.18.2"
+    zod: "npm:^4.4.3"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-    "@deepseek-ai/dsh-brand": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-invariants": ^0.1.2-alpha.5
-    "@deepseek-ai/dsh-session": ^0.1.2-alpha.5
-    "@deepseek-ai/schemastery": ^3.18.2
-  checksum: 10c0/8949530e8f16f8ae08e3c5948e5bf9e8323d8f75e1fccbabc1a983e0be1480da882df20a412d20d29d68a856cfeb5d51168eb377c05ad8679f05196baa38d7e2
+  checksum: 10c0/eb16f021e39ba2376152055018722937ea61b198579d2ea3b37cde8ec6c55dc9b299bbb564f7692e984c99a46c086330f32919664f2c63bb68ab692e7f1a3941
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-util-values@npm:^0.1.2-alpha.5":
-  version: 0.1.2-alpha.5
-  resolution: "@deepseek-ai/dsh-util-values@npm:0.1.2-alpha.5"
+"@deepseek-ai/dsh-session@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-session@npm:0.1.3-alpha.2"
+  dependencies:
+    "@deepseek-ai/dsh-brand": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-llm": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-util-values": "npm:^0.1.3-alpha.2"
   peerDependencies:
     "@deepseek-ai/cordis": ^4.0.2
-  checksum: 10c0/ef8771f2e9a17f1c2f76c389a548923d922970858f518185dcbe3885e6d99fc3a434d309ca74de0e68fa7fa5f9eabe74b1d69ec7cc38f42f5578f2c04b7cd440
+    "@deepseek-ai/dsh-scope": ^0.1.3-alpha.2
+  checksum: 10c0/c62264214c1e01af65c8ca89614826dd0723ad9c5990c2f9b91a676ce8ca06b5d25e88c3a02f83917538b9898a11e8eb41b2a2c345fd7666ae2fddaafb81187a
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-settings@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-settings@npm:0.1.3-alpha.2"
+  dependencies:
+    "@deepseek-ai/dsh-util-values": "npm:^0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+    "@deepseek-ai/dsh-brand": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-invariants": ^0.1.3-alpha.2
+    "@deepseek-ai/dsh-session": ^0.1.3-alpha.2
+    "@deepseek-ai/schemastery": ^3.18.2
+  checksum: 10c0/c8439b3d8497e01b1fab69dcac468605bd3ff23ec28dc2768c74b0ad21663f039c79078fea38b4efce5d9daecc0d116e9d248436497de4404285a2e771fa8b71
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-timeout@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-timeout@npm:0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+  checksum: 10c0/1807a4c96998d89d32b595ca4e91cc59500d33050e7dc575c5a93bd0e46d1ccfbc9ffea781001f0b788adb1d9439e17966a978eabf56a49604cc53877fe8aef2
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-typert-protocol@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-typert-protocol@npm:0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+  checksum: 10c0/f7e4149fd255c7ef592be7ed5560ed79b0197157f648737ed5cd8ae20a5ff04ed808be4f1cdb83d8f5c4a6be509432f9db35dca86924dd14aea15564d9b347ee
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-util-crypto@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-util-crypto@npm:0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+  checksum: 10c0/c1446c3fefdc8190accdfccf15cb733cc1621eb7ce21e465bbb80f5fbee1bf2431c078182525f05a5b3119c2569da287c7ac8c2e80380da9c1948368611c01a0
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-util-values@npm:^0.1.3-alpha.2":
+  version: 0.1.3-alpha.2
+  resolution: "@deepseek-ai/dsh-util-values@npm:0.1.3-alpha.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.2
+  checksum: 10c0/fbcf6fa5ed1bf303ad1ba7a63cfb94922006de78c69f39c2c03019078d807f48f16d97cd3a2eabb7878f1ffc1237561a7e98ac15dcade2f0fa1b70486d366831
   languageName: node
   linkType: hard
 
@@ -368,17 +454,19 @@ __metadata:
   resolution: "@dingyi222666/dsh-session-notification@workspace:."
   dependencies:
     "@deepseek-ai/cordis": "npm:^4.0.1"
-    "@deepseek-ai/dsh-api-session-controller": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-connection": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-locale": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-store": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-ui-conversation": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-ui-primitives": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-ui-session": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-ui-settings": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-client-ui-slots": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-invariants": "npm:^0.1.2-alpha.5"
-    "@deepseek-ai/dsh-settings": "npm:^0.1.2-alpha.5"
+    "@deepseek-ai/dsh-api-remotes": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-api-session-controller": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-connection": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-locale": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-store": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-ui-conversation": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-ui-primitives": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-ui-renderer": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-ui-session": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-ui-settings": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-client-ui-slots": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-invariants": "npm:^0.1.3-alpha.2"
+    "@deepseek-ai/dsh-settings": "npm:^0.1.3-alpha.2"
     "@deepseek-ai/schemastery": "npm:^3.18.1"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/react": "npm:^16.1.0"
