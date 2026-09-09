@@ -39,6 +39,7 @@ type NotificationsActions = {
   setBrowserEnabled: (draft: NotificationsState, enabled: boolean) => void
   setNotifyCurrent: (draft: NotificationsState, enabled: boolean) => void
   setMainOnly: (draft: NotificationsState, enabled: boolean) => void
+  setWaitForSubagents: (draft: NotificationsState, enabled: boolean) => void
   setSoundEnabled: (draft: NotificationsState, enabled: boolean) => void
   setVolume: (draft: NotificationsState, volume: number) => void
   setType: (draft: NotificationsState, kind: NotificationType, patch: Partial<NotificationTypeSettings>) => void
@@ -77,6 +78,9 @@ export function createNotificationsStore(): EngineStoreHandle<NotificationsState
       },
       setMainOnly: (draft, enabled) => {
         draft.settings = { ...draft.settings, mainOnly: enabled }
+      },
+      setWaitForSubagents: (draft, enabled) => {
+        draft.settings = { ...draft.settings, waitForSubagents: enabled }
       },
       setSoundEnabled: (draft, enabled) => {
         draft.settings = { ...draft.settings, soundEnabled: enabled }

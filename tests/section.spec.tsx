@@ -33,6 +33,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
     setBrowserEnabled: vi.fn(async () => {}),
     setNotifyCurrent: vi.fn(),
     setMainOnly: vi.fn(),
+    setWaitForSubagents: vi.fn(),
     setSoundEnabled: vi.fn(),
     setVolume: vi.fn(),
     setType: vi.fn(),
@@ -48,6 +49,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
     setBrowserEnabled: ReturnType<typeof vi.fn>
     setNotifyCurrent: ReturnType<typeof vi.fn>
     setMainOnly: ReturnType<typeof vi.fn>
+    setWaitForSubagents: ReturnType<typeof vi.fn>
     setSoundEnabled: ReturnType<typeof vi.fn>
     setVolume: ReturnType<typeof vi.fn>
     setType: ReturnType<typeof vi.fn>
@@ -69,9 +71,9 @@ describe('NotificationsSection', () => {
     expect(screen.getByText(zh['type.permission.title'])).toBeTruthy()
   })
 
-  it('renders eight switches: browser, current-session, main-only, sound, and one per kind', () => {
+  it('renders nine switches: browser, current-session, main-only, wait-for-subagents, sound, and one per kind', () => {
     renderSection(stateOf())
-    expect(screen.getAllByRole('switch')).toHaveLength(8)
+    expect(screen.getAllByRole('switch')).toHaveLength(9)
   })
 
   it('toggles the current-session alert switch through setNotifyCurrent', () => {
@@ -86,6 +88,13 @@ describe('NotificationsSection', () => {
     const switches = screen.getAllByRole('switch')
     fireEvent.click(switches[2]) // main-only row switch
     expect(callbacks.setMainOnly).toHaveBeenCalledWith(false)
+  })
+
+  it('toggles the wait-for-subagents switch through setWaitForSubagents', () => {
+    const callbacks = renderSection(stateOf())
+    const switches = screen.getAllByRole('switch')
+    fireEvent.click(switches[3]) // wait-for-subagents row switch
+    expect(callbacks.setWaitForSubagents).toHaveBeenCalledWith(false)
   })
 
   it('renders the sound pickers with the current sound label', () => {
@@ -109,7 +118,7 @@ describe('NotificationsSection', () => {
   it('toggles a kind enable switch through setType', () => {
     const callbacks = renderSection(stateOf())
     const switches = screen.getAllByRole('switch')
-    fireEvent.click(switches[5]) // failed row switch (0 browser, 1 current, 2 main-only, 3 sound, 4 completed)
+    fireEvent.click(switches[6]) // failed row switch (0 browser, 1 current, 2 main-only, 3 wait, 4 sound, 5 completed)
     expect(callbacks.setType).toHaveBeenCalledWith('failed', { enabled: false })
   })
 

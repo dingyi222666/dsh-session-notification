@@ -34,6 +34,8 @@ export interface NotificationsSectionInjected {
   setNotifyCurrent: (enabled: boolean) => void
   /** Persist whether only the main session alerts (subagents stay silent). */
   setMainOnly: (enabled: boolean) => void
+  /** Persist whether a main session waits for all its subagents to finish. */
+  setWaitForSubagents: (enabled: boolean) => void
   /** Persist the sound master switch. */
   setSoundEnabled: (enabled: boolean) => void
   /** Persist the master volume. */
@@ -184,7 +186,7 @@ function VolumeSlider({ value, label, onChange }: {
  * @param props - composed slot props.
  */
 export function NotificationsSection({
-  t, useStore, setBrowserEnabled, setNotifyCurrent, setMainOnly, setSoundEnabled, setVolume, setType, testSound,
+  t, useStore, setBrowserEnabled, setNotifyCurrent, setMainOnly, setWaitForSubagents, setSoundEnabled, setVolume, setType, testSound,
   requestPermission, testBrowserNotification, uploadCustomSound,
 }: NotificationsSectionProps) {
   const { settings, permission, customSounds } = useStore(state => state)
@@ -243,6 +245,16 @@ export function NotificationsSection({
           </div>
           <div className={css.rowActions}>
             <Switch on={settings.mainOnly} label={t('main.title')} onChange={setMainOnly} />
+          </div>
+        </li>
+
+        <li className={css.row}>
+          <div className={css.rowText}>
+            <div className={css.rowTitle}>{t('wait.title')}</div>
+            <div className={css.desc}>{t('wait.desc')}</div>
+          </div>
+          <div className={css.rowActions}>
+            <Switch on={settings.waitForSubagents} label={t('wait.title')} onChange={setWaitForSubagents} />
           </div>
         </li>
 

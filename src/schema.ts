@@ -34,6 +34,7 @@ export const NotificationSettingsSchema: z<PersistedNotificationSettings> = z.ob
   browserEnabled: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.browserEnabled),
   notifyCurrent: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.notifyCurrent),
   mainOnly: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.mainOnly),
+  waitForSubagents: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.waitForSubagents),
   soundEnabled: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.soundEnabled),
   volume: z.number().min(0).max(1).default(DEFAULT_NOTIFICATION_SETTINGS.volume),
   types: z.object({

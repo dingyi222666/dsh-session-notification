@@ -41,6 +41,7 @@ function makePorts(overrides: Partial<NotificationEnginePorts> = {}): Notificati
     titleOf: (id) => String(id),
     settle: () => Promise.resolve(),
     isSubagent: () => false,
+    hasRunningDescendants: () => false,
     emit: (event) => { events.push(event) },
     ...overrides,
     events,
@@ -239,6 +240,84 @@ describe('NotificationEngine', () => {
     engine.observe(list({ sub: summary('sub', false) }))
     await flush()
     expect(ports.events).toEqual([])
+  })
+
+  it('holds a main completion while subagents still run, then alerts once', async () => {
+    let descendantsRunning = true
+    const ports = makePorts({
+      detailOf: () => detail({ finalText: '全部完成' }),
+      hasRunningDescendants: () => descendantsRunning,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ main: summary('main', true) }))
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    // The fan-out is not finished: the completion stays held.
+    expect(ports.events).toEqual([])
+    // The last descendant settles; the next list frame releases it.
+    descendantsRunning = false
+    engine.observe(list({ main: summary('main', false) }))
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '全部完成' }])
+  })
+
+  it('never holds a failure behind subagents', async () => {
+    const details = new Map<string, SessionDetail>([['main', detail()]])
+    const ports = makePorts({
+      detailOf: (id) => details.get(String(id)),
+      hasRunningDescendants: () => true,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ main: summary('main', true) }))
+    details.set('main', detail({ maxTurnErrorSeq: 9, failureMessage: 'boom' }))
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'failed', sessionId: 'main', title: 'main', detail: 'boom' }])
+  })
+
+  it('alerts immediately when the subagent wait is off', async () => {
+    const ports = makePorts({
+      detailOf: () => detail(),
+      hasRunningDescendants: () => true,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.setWaitForSubagents(false)
+    engine.observe(list({ main: summary('main', true) }))
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '' }])
+  })
+
+  it('releases a held completion when the wait is turned off', async () => {
+    const ports = makePorts({
+      detailOf: () => detail(),
+      hasRunningDescendants: () => true,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ main: summary('main', true) }))
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+    engine.setWaitForSubagents(false)
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '' }])
+  })
+
+  it('drops a held completion when a newer run starts', async () => {
+    let descendantsRunning = true
+    const ports = makePorts({
+      detailOf: () => detail(),
+      hasRunningDescendants: () => descendantsRunning,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ main: summary('main', true) }))
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+    // A new run supersedes the held completion; only the second run alerts.
+    engine.observe(list({ main: summary('main', true) }))
+    descendantsRunning = false
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '' }])
   })
 })
 

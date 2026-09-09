@@ -146,6 +146,23 @@ export function apply(ctx: ClientContext): void {
     // origin; the main-only filter silences them.
     isSubagent: (id: SessionId) =>
       ctx.sessions.list.getSnapshot().byId[id]?.origin === 'subagent',
+    // Walk the parentId chain so a nested subagent keeps its root's completion
+    // held too (a subagent may itself fan out).
+    hasRunningDescendants: (id: SessionId) => {
+      const byId = ctx.sessions.list.getSnapshot().byId
+      const seen = new Set<SessionId>([id])
+      const queue: SessionId[] = [id]
+      while (queue.length > 0) {
+        const parent = queue.shift() as SessionId
+        for (const summary of Object.values(byId)) {
+          if (summary.parentId !== parent || seen.has(summary.id)) continue
+          seen.add(summary.id)
+          if (summary.running) return true
+          queue.push(summary.id)
+        }
+      }
+      return false
+    },
     emit: (event) => {
       // One tab wins the event (a visible tab ahead of a background one); the
       // others stay silent for it. Without BroadcastChannel every tab claims
@@ -155,12 +172,14 @@ export function apply(ctx: ClientContext): void {
       })
     },
   })
-  // Keep the engine's filter in lockstep with the durable preference.
+  // Keep the engine's filters in lockstep with the durable preferences.
   engine.setMainOnly(currentSettings().mainOnly)
-  // Re-sync the filter on every scope change (including other tabs).
+  engine.setWaitForSubagents(currentSettings().waitForSubagents)
+  // Re-sync the filters on every scope change (including other tabs).
   ctx.effect(() => scope.subscribe(() => {
     engine.setMainOnly(currentSettings().mainOnly)
-  }), 'dsh-session-notification: main-only filter sync')
+    engine.setWaitForSubagents(currentSettings().waitForSubagents)
+  }), 'dsh-session-notification: filter sync')
   ctx.effect(() => {
     const unsubscribe = ctx.sessions.list.subscribe(() => engine.observe(ctx.sessions.list.getSnapshot()))
     // Establish the baseline so pre-existing state raises nothing.
@@ -191,10 +210,11 @@ export function apply(ctx: ClientContext): void {
   }), 'dsh-session-notification: pending watch')
 
   /** Persist one top-level preference through the scope, mirroring optimistically. */
-  const persist = (field: 'browserEnabled' | 'notifyCurrent' | 'mainOnly' | 'soundEnabled' | 'volume', value: unknown): void => {
+  const persist = (field: 'browserEnabled' | 'notifyCurrent' | 'mainOnly' | 'waitForSubagents' | 'soundEnabled' | 'volume', value: unknown): void => {
     if (field === 'browserEnabled') bound?.setBrowserEnabled(value as boolean)
     else if (field === 'notifyCurrent') bound?.setNotifyCurrent(value as boolean)
     else if (field === 'mainOnly') bound?.setMainOnly(value as boolean)
+    else if (field === 'waitForSubagents') bound?.setWaitForSubagents(value as boolean)
     else if (field === 'soundEnabled') bound?.setSoundEnabled(value as boolean)
     else bound?.setVolume(value as number)
     void scope.set(field, value)
@@ -225,6 +245,7 @@ export function apply(ctx: ClientContext): void {
       },
       setNotifyCurrent: (enabled) => { persist('notifyCurrent', enabled) },
       setMainOnly: (enabled) => { persist('mainOnly', enabled) },
+      setWaitForSubagents: (enabled) => { persist('waitForSubagents', enabled) },
       setSoundEnabled: (enabled) => { persist('soundEnabled', enabled) },
       setVolume: (volume) => { persist('volume', Math.min(1, Math.max(0, volume))) },
       setType: (kind, patch) => { persistType(kind, patch) },

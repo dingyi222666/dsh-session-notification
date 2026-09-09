@@ -41,6 +41,10 @@ export interface NotificationSettings {
   /** Only alert for the main session, never for subagents. When off, every
    *  session (including parallel subagents) alerts. */
   mainOnly: boolean
+  /** Hold a main session's completion until every subagent it spawned has
+   *  finished, so a run that only paused between subagent waves does not
+   *  alert early. Failures still alert immediately. */
+  waitForSubagents: boolean
   /** Master switch for sound playback. */
   soundEnabled: boolean
   /** Master playback volume in [0, 1] (0–100%); the sound chain applies a
@@ -61,6 +65,9 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = Object.freeze
   // Main-session only by default: a fan-out of parallel subagents would
   // otherwise alert once per subagent. Turn it off to hear from them too.
   mainOnly: true,
+  // Wait for the whole fan-out by default: a main session that pauses between
+  // subagent waves is not finished, so it stays silent until they all settle.
+  waitForSubagents: true,
   soundEnabled: true,
   volume: 0.6,
   types: Object.freeze({
@@ -126,6 +133,8 @@ export function resolveNotificationSettings(raw: unknown): NotificationSettings 
       ? source.notifyCurrent : DEFAULT_NOTIFICATION_SETTINGS.notifyCurrent,
     mainOnly: typeof source.mainOnly === 'boolean'
       ? source.mainOnly : DEFAULT_NOTIFICATION_SETTINGS.mainOnly,
+    waitForSubagents: typeof source.waitForSubagents === 'boolean'
+      ? source.waitForSubagents : DEFAULT_NOTIFICATION_SETTINGS.waitForSubagents,
     soundEnabled: typeof source.soundEnabled === 'boolean'
       ? source.soundEnabled : DEFAULT_NOTIFICATION_SETTINGS.soundEnabled,
     volume,

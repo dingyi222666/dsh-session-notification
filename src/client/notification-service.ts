@@ -86,6 +86,8 @@ export interface NotificationEnginePorts {
   settle: () => Promise<void>
   /** Whether one session is a subagent (never the main session). */
   isSubagent: (sessionId: SessionId) => boolean
+  /** Whether one session still has a running descendant (recursive). */
+  hasRunningDescendants: (sessionId: SessionId) => boolean
   /** Deliver one classified event. */
   emit: (event: NotificationEvent) => void
 }
@@ -108,9 +110,14 @@ export class NotificationEngine {
   private readonly runs = new Map<SessionId, RunState>()
   private readonly settling = new Set<SessionId>()
   private readonly pendingKeys = new Map<SessionId, string>()
+  /** Completions held back until every descendant subagent has finished. */
+  private readonly heldCompletions = new Map<SessionId, string>()
   /** Only the main session alerts (subagents stay silent). Defaults on,
    *  matching DEFAULT_NOTIFICATION_SETTINGS; wiring syncs the live value. */
   private mainOnly = true
+  /** Hold a main session's completion while its subagents still run.
+   *  Defaults on, matching DEFAULT_NOTIFICATION_SETTINGS. */
+  private waitForSubagents = true
 
   /** @param ports - injected readers and sink. */
   constructor(private readonly ports: NotificationEnginePorts) {}
@@ -121,6 +128,22 @@ export class NotificationEngine {
     // Turning main-only back on forgets every tracked subagent so a stale
     // running edge can never fire for one after the switch.
     if (enabled) this.forgetSubagents()
+  }
+
+  /** Update whether completions wait for every descendant subagent. */
+  setWaitForSubagents(enabled: boolean): void {
+    this.waitForSubagents = enabled
+    // Turning the wait off releases anything already held.
+    if (!enabled) this.releaseHeld()
+  }
+
+  /** Emit every held completion whose descendants have all settled. */
+  private releaseHeld(): void {
+    for (const [id, detail] of [...this.heldCompletions]) {
+      if (this.waitForSubagents && this.ports.hasRunningDescendants(id)) continue
+      this.heldCompletions.delete(id)
+      this.ports.emit({ kind: 'completed', sessionId: id, title: this.ports.titleOf(id), detail })
+    }
   }
 
   /** Whether one session should stay silent under the main-only filter. */
@@ -168,8 +191,11 @@ export class NotificationEngine {
         this.prevRunning.delete(id)
         this.runs.delete(id)
         this.pendingKeys.delete(id)
+        this.heldCompletions.delete(id)
       }
     }
+    // A descendant may have just settled: release any completion waiting on it.
+    this.releaseHeld()
   }
 
   /**
@@ -212,6 +238,8 @@ export class NotificationEngine {
 
   /** Capture the pre-run failure baseline when a run starts. */
   private armRun(id: SessionId): void {
+    // A new run supersedes any completion still waiting on descendants.
+    this.heldCompletions.delete(id)
     const detail = this.ports.detailOf(id)
     this.runs.set(id, {
       baselineErrorSeq: detail?.maxTurnErrorSeq ?? 0,
@@ -243,12 +271,19 @@ export class NotificationEngine {
       const message = failed
         ? (detail?.failureMessage ?? detail?.lastAgentError ?? '')
         : (detail?.finalText ?? '')
-      this.ports.emit({
-        kind: failed ? 'failed' : 'completed',
-        sessionId: id,
-        title: this.ports.titleOf(id),
-        detail: message,
-      })
+      if (failed) {
+        // A failure is actionable now: never hold it behind subagents.
+        this.heldCompletions.delete(id)
+        this.ports.emit({ kind: 'failed', sessionId: id, title: this.ports.titleOf(id), detail: message })
+        return
+      }
+      // Hold the completion while descendants still run: the session only
+      // paused between subagent waves, so alert when the whole fan-out ends.
+      if (this.waitForSubagents && this.ports.hasRunningDescendants(id)) {
+        this.heldCompletions.set(id, message)
+        return
+      }
+      this.ports.emit({ kind: 'completed', sessionId: id, title: this.ports.titleOf(id), detail: message })
     } finally {
       this.settling.delete(id)
     }
