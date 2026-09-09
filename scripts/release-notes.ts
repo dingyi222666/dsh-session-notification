@@ -100,4 +100,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **依赖升级至 0.1.3-alpha.2**: @deepseek-ai/dsh-* 依赖升到 ^0.1.3-alpha.2(npm 已发布);tsconfig 的本地检出路径映射全部移除,类型恢复从 node_modules 解析;alpha.1→alpha.2 的差异(连接恢复配置、会话事件校验等)不影响本插件的 API 面,代码零改动',
     ],
   },
+  '0.1.11': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.1.5-alpha.2**: @deepseek-ai/dsh-* 依赖升到 ^0.1.5-alpha.2(alpha 通道最新);0.1.3-alpha.2→0.1.5-alpha.2 跨度虽大(约 774 提交),但插件消费的 API 面保持稳定——平台模块表仅新增 dockkit 种子(插件未用),settings.section 席位与 inject/external 语义均无变化,代码零改动,typecheck/96 specs/build 全绿',
+    ],
+  },
 }
