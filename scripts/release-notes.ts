@@ -130,4 +130,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **文案**: 「通知范围」一行补上说明文字——选哪些会话提醒,以及「主会话 + 等子会话」会等子会话全部结束再响',
     ],
   },
+  '0.1.16': {
+    features: [],
+    fixes: [
+      '- **npm 关联**: package.json 补上 repository / homepage / bugs 字段,npm 上的包由此关联回本仓库,插件市场与精选列表可据此展示下载量',
+    ],
+  },
 }
