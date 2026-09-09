@@ -36,6 +36,7 @@ const VERSIONS: ReadonlyArray<readonly [version: string, commit: string]> = [
   ['0.1.11', 'f6ffd61f3'],
   ['0.1.12', 'bf8077230'],
   ['0.1.13', '58dfa65f6'],
+  ['0.1.14', '39047c493'],
 ]
 
 /** GitHub logins by git author email. */
