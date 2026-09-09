@@ -124,4 +124,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
     ],
     fixes: [],
   },
+  '0.1.15': {
+    features: [],
+    fixes: [
+      '- **文案**: 「通知范围」一行补上说明文字——选哪些会话提醒,以及「主会话 + 等子会话」会等子会话全部结束再响',
+    ],
+  },
 }

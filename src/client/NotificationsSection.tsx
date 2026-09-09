@@ -239,6 +239,7 @@ export function NotificationsSection({
         <li className={css.row}>
           <div className={css.rowText}>
             <div className={css.rowTitle}>{t('mode.title')}</div>
+            <div className={css.desc}>{t('mode.desc')}</div>
           </div>
           <div className={css.rowActions}>
             <ModeMenu value={settings.notificationMode} t={t} onSelect={setNotificationMode} />
