@@ -42,6 +42,7 @@ import type {
 import type { NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 import { DEFAULT_NOTIFICATION_SETTINGS } from '../settings.ts'
 import { createLocalSettingsScope } from './local-settings.ts'
+import { createTabCoordinator } from './tab-coordinator.ts'
 import { SoundPlayer } from './sounds.ts'
 import { browserPermission, requestBrowserPermission, showBrowserNotification } from './browser-notify.ts'
 import { MAX_CUSTOM_AUDIO_BYTES, readCustomSound, readFileAsDataUrl, writeCustomSound } from './custom-audio.ts'
@@ -100,6 +101,10 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => scope.subscribe(() => { bound?.adopt(scope.getSnapshot()) }), 'dsh-session-notification: scope adoption')
 
   const player = new SoundPlayer(() => currentSettings().volume)
+  // Cross-tab arbiter: one open tab wins each event, so N tabs do not ring N
+  // times; a visible tab takes the event ahead of a background one.
+  const coordinator = createTabCoordinator()
+  ctx.effect(() => () => coordinator.dispose(), 'dsh-session-notification: tab coordinator')
   const t = ctx.locale.bind(NS)
   const translate = (key: string): string => t(key as NotificationsKey)
   /** Play the effective sound: a custom audio when one is supplied, else the built-in. */
@@ -141,7 +146,14 @@ export function apply(ctx: ClientContext): void {
     // origin; the main-only filter silences them.
     isSubagent: (id: SessionId) =>
       ctx.sessions.list.getSnapshot().byId[id]?.origin === 'subagent',
-    emit: (event) => { dispatcher.dispatch(event) },
+    emit: (event) => {
+      // One tab wins the event (a visible tab ahead of a background one); the
+      // others stay silent for it. Without BroadcastChannel every tab claims
+      // its own event, i.e. the pre-coordination behavior.
+      void coordinator.claim(`${event.sessionId}:${event.kind}`).then((owned) => {
+        if (owned) dispatcher.dispatch(event)
+      })
+    },
   })
   // Keep the engine's filter in lockstep with the durable preference.
   engine.setMainOnly(currentSettings().mainOnly)

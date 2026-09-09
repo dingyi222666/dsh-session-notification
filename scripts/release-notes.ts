@@ -106,4 +106,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **依赖升级至 0.1.5-alpha.2**: @deepseek-ai/dsh-* 依赖升到 ^0.1.5-alpha.2(alpha 通道最新);0.1.3-alpha.2→0.1.5-alpha.2 跨度虽大(约 774 提交),但插件消费的 API 面保持稳定——平台模块表仅新增 dockkit 种子(插件未用),settings.section 席位与 inject/external 语义均无变化,代码零改动,typecheck/96 specs/build 全绿',
     ],
   },
+  '0.1.12': {
+    features: [
+      '- **多标签页只响一次**: 同一次完成/提问/权限事件在所有同源标签页之间只提醒一次——标签页通过 BroadcastChannel 仲裁,先到者得;你正在看的那个标签页优先,后台标签页让位,不再因为开着多个 dsh 页面而每个页面各响一遍(不同事件仍各自提醒;不同端口/实例的页面互不影响)',
+    ],
+    fixes: [],
+  },
 }
