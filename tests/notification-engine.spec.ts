@@ -219,7 +219,7 @@ describe('NotificationEngine', () => {
       isSubagent: (id) => String(id) === 'sub',
     })
     const engine = new NotificationEngine(ports)
-    engine.setMainOnly(false)
+    engine.setNotificationMode('all')
     engine.observe(list({ sub: summary('sub', true) }))
     engine.observe(list({ sub: summary('sub', false) }))
     await flush()
@@ -232,11 +232,11 @@ describe('NotificationEngine', () => {
       isSubagent: (id) => String(id) === 'sub',
     })
     const engine = new NotificationEngine(ports)
-    engine.setMainOnly(false)
+    engine.setNotificationMode('all')
     engine.observe(list({ sub: summary('sub', true) }))
     // Re-enabling the filter forgets the tracked subagent: finishing now
     // produces no event.
-    engine.setMainOnly(true)
+    engine.setNotificationMode('main')
     engine.observe(list({ sub: summary('sub', false) }))
     await flush()
     expect(ports.events).toEqual([])
@@ -280,7 +280,7 @@ describe('NotificationEngine', () => {
       hasRunningDescendants: () => true,
     })
     const engine = new NotificationEngine(ports)
-    engine.setWaitForSubagents(false)
+    engine.setNotificationMode('main')
     engine.observe(list({ main: summary('main', true) }))
     engine.observe(list({ main: summary('main', false) }))
     await flush()
@@ -297,7 +297,7 @@ describe('NotificationEngine', () => {
     engine.observe(list({ main: summary('main', false) }))
     await flush()
     expect(ports.events).toEqual([])
-    engine.setWaitForSubagents(false)
+    engine.setNotificationMode('main')
     expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '' }])
   })
 

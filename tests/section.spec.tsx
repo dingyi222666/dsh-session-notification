@@ -32,8 +32,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
     useStore: (() => state) as unknown as NotificationsSectionProps['useStore'],
     setBrowserEnabled: vi.fn(async () => {}),
     setNotifyCurrent: vi.fn(),
-    setMainOnly: vi.fn(),
-    setWaitForSubagents: vi.fn(),
+    setNotificationMode: vi.fn(),
     setSoundEnabled: vi.fn(),
     setVolume: vi.fn(),
     setType: vi.fn(),
@@ -48,8 +47,7 @@ function renderSection(state: NotificationsState, callbacks: Partial<Notificatio
   return props as unknown as {
     setBrowserEnabled: ReturnType<typeof vi.fn>
     setNotifyCurrent: ReturnType<typeof vi.fn>
-    setMainOnly: ReturnType<typeof vi.fn>
-    setWaitForSubagents: ReturnType<typeof vi.fn>
+    setNotificationMode: ReturnType<typeof vi.fn>
     setSoundEnabled: ReturnType<typeof vi.fn>
     setVolume: ReturnType<typeof vi.fn>
     setType: ReturnType<typeof vi.fn>
@@ -71,9 +69,9 @@ describe('NotificationsSection', () => {
     expect(screen.getByText(zh['type.permission.title'])).toBeTruthy()
   })
 
-  it('renders nine switches: browser, current-session, main-only, wait-for-subagents, sound, and one per kind', () => {
+  it('renders seven switches: browser, current-session, sound, and one per kind', () => {
     renderSection(stateOf())
-    expect(screen.getAllByRole('switch')).toHaveLength(9)
+    expect(screen.getAllByRole('switch')).toHaveLength(7)
   })
 
   it('toggles the current-session alert switch through setNotifyCurrent', () => {
@@ -83,18 +81,11 @@ describe('NotificationsSection', () => {
     expect(callbacks.setNotifyCurrent).toHaveBeenCalledWith(true)
   })
 
-  it('toggles the main-only switch through setMainOnly', () => {
+  it('picks a notification mode from the official menu', () => {
     const callbacks = renderSection(stateOf())
-    const switches = screen.getAllByRole('switch')
-    fireEvent.click(switches[2]) // main-only row switch
-    expect(callbacks.setMainOnly).toHaveBeenCalledWith(false)
-  })
-
-  it('toggles the wait-for-subagents switch through setWaitForSubagents', () => {
-    const callbacks = renderSection(stateOf())
-    const switches = screen.getAllByRole('switch')
-    fireEvent.click(switches[3]) // wait-for-subagents row switch
-    expect(callbacks.setWaitForSubagents).toHaveBeenCalledWith(false)
+    fireEvent.click(screen.getByLabelText(zh['mode.title']))
+    fireEvent.click(screen.getByTestId('menu-item-all'))
+    expect(callbacks.setNotificationMode).toHaveBeenCalledWith('all')
   })
 
   it('renders the sound pickers with the current sound label', () => {
@@ -118,7 +109,7 @@ describe('NotificationsSection', () => {
   it('toggles a kind enable switch through setType', () => {
     const callbacks = renderSection(stateOf())
     const switches = screen.getAllByRole('switch')
-    fireEvent.click(switches[6]) // failed row switch (0 browser, 1 current, 2 main-only, 3 wait, 4 sound, 5 completed)
+    fireEvent.click(switches[4]) // failed row switch (0 browser, 1 current, 2 sound, 3 completed)
     expect(callbacks.setType).toHaveBeenCalledWith('failed', { enabled: false })
   })
 

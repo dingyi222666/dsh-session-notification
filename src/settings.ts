@@ -15,6 +15,18 @@ export const NOTIFICATION_TYPES = ['completed', 'failed', 'question', 'permissio
 export type NotificationType = typeof NOTIFICATION_TYPES[number]
 
 /**
+ * Which sessions alert, and whether a main session waits for its subagents:
+ * - `all`: every session alerts, including subagents;
+ * - `main`: only the main session alerts, as soon as it goes idle;
+ * - `main-wait`: only the main session alerts, held until every subagent it
+ *   spawned has finished (the fan-out, not a pause between waves).
+ */
+export const NOTIFICATION_MODES = ['all', 'main', 'main-wait'] as const
+
+/** One notification-scope mode. */
+export type NotificationMode = typeof NOTIFICATION_MODES[number]
+
+/**
  * The four built-in sound effects. Each notification kind defaults to one of
  * them and can be reassigned to any other (or to `none`).
  */
@@ -38,13 +50,8 @@ export interface NotificationSettings {
   browserEnabled: boolean
   /** Whether events from the session you are currently reading also alert. */
   notifyCurrent: boolean
-  /** Only alert for the main session, never for subagents. When off, every
-   *  session (including parallel subagents) alerts. */
-  mainOnly: boolean
-  /** Hold a main session's completion until every subagent it spawned has
-   *  finished, so a run that only paused between subagent waves does not
-   *  alert early. Failures still alert immediately. */
-  waitForSubagents: boolean
+  /** Which sessions alert and whether the main session waits for subagents. */
+  notificationMode: NotificationMode
   /** Master switch for sound playback. */
   soundEnabled: boolean
   /** Master playback volume in [0, 1] (0–100%); the sound chain applies a
@@ -62,12 +69,10 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = Object.freeze
   // The session you are reading stays quiet by default; the toggle opts into
   // being alerted there too.
   notifyCurrent: false,
-  // Main-session only by default: a fan-out of parallel subagents would
-  // otherwise alert once per subagent. Turn it off to hear from them too.
-  mainOnly: true,
-  // Wait for the whole fan-out by default: a main session that pauses between
-  // subagent waves is not finished, so it stays silent until they all settle.
-  waitForSubagents: true,
+  // Main session only, after its subagents: a fan-out of parallel subagents
+  // would otherwise alert once per subagent, and a pause between waves is not
+  // a finished run.
+  notificationMode: 'main-wait',
   soundEnabled: true,
   volume: 0.6,
   types: Object.freeze({
@@ -105,6 +110,15 @@ export function isNotificationType(value: unknown): value is NotificationType {
 }
 
 /**
+ * Narrow one candidate to a notification mode.
+ * @param value - value crossing the settings or wire boundary.
+ * @returns whether the value is a selectable notification mode.
+ */
+export function isNotificationMode(value: unknown): value is NotificationMode {
+  return NOTIFICATION_MODES.some(mode => mode === value)
+}
+
+/**
  * Merge an unknown wire section over the defaults, dropping malformed fields
  * so a hand-edited user document degrades to the default rather than to a
  * broken player configuration.
@@ -126,15 +140,20 @@ export function resolveNotificationSettings(raw: unknown): NotificationSettings 
   }
   const volume = typeof source.volume === 'number' && Number.isFinite(source.volume)
     ? Math.min(1, Math.max(0, source.volume)) : DEFAULT_NOTIFICATION_SETTINGS.volume
+  // The mode supersedes the two legacy booleans; stored documents written
+  // before the merge still resolve onto the matching mode.
+  const mode = (): NotificationMode => {
+    if (isNotificationMode(source.notificationMode)) return source.notificationMode
+    if (source.mainOnly === false) return 'all'
+    if (source.waitForSubagents === false) return 'main'
+    return DEFAULT_NOTIFICATION_SETTINGS.notificationMode
+  }
   return {
     browserEnabled: typeof source.browserEnabled === 'boolean'
       ? source.browserEnabled : DEFAULT_NOTIFICATION_SETTINGS.browserEnabled,
     notifyCurrent: typeof source.notifyCurrent === 'boolean'
       ? source.notifyCurrent : DEFAULT_NOTIFICATION_SETTINGS.notifyCurrent,
-    mainOnly: typeof source.mainOnly === 'boolean'
-      ? source.mainOnly : DEFAULT_NOTIFICATION_SETTINGS.mainOnly,
-    waitForSubagents: typeof source.waitForSubagents === 'boolean'
-      ? source.waitForSubagents : DEFAULT_NOTIFICATION_SETTINGS.waitForSubagents,
+    notificationMode: mode(),
     soundEnabled: typeof source.soundEnabled === 'boolean'
       ? source.soundEnabled : DEFAULT_NOTIFICATION_SETTINGS.soundEnabled,
     volume,

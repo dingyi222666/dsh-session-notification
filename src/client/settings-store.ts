@@ -12,7 +12,7 @@ import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-sto
 import type { SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
-  type NotificationSettings, type NotificationType, type NotificationTypeSettings,
+  type NotificationMode, type NotificationSettings, type NotificationType, type NotificationTypeSettings,
 } from '../settings.ts'
 import { browserPermission, type BrowserPermission } from './browser-notify.ts'
 import { readCustomSounds, withCustomSound, type CustomSounds } from './custom-audio.ts'
@@ -38,8 +38,7 @@ type NotificationsActions = {
   adopt: (draft: NotificationsState, snapshot: SettingsScopeSnapshot<NotificationSettings>) => void
   setBrowserEnabled: (draft: NotificationsState, enabled: boolean) => void
   setNotifyCurrent: (draft: NotificationsState, enabled: boolean) => void
-  setMainOnly: (draft: NotificationsState, enabled: boolean) => void
-  setWaitForSubagents: (draft: NotificationsState, enabled: boolean) => void
+  setNotificationMode: (draft: NotificationsState, mode: NotificationMode) => void
   setSoundEnabled: (draft: NotificationsState, enabled: boolean) => void
   setVolume: (draft: NotificationsState, volume: number) => void
   setType: (draft: NotificationsState, kind: NotificationType, patch: Partial<NotificationTypeSettings>) => void
@@ -76,11 +75,8 @@ export function createNotificationsStore(): EngineStoreHandle<NotificationsState
       setNotifyCurrent: (draft, enabled) => {
         draft.settings = { ...draft.settings, notifyCurrent: enabled }
       },
-      setMainOnly: (draft, enabled) => {
-        draft.settings = { ...draft.settings, mainOnly: enabled }
-      },
-      setWaitForSubagents: (draft, enabled) => {
-        draft.settings = { ...draft.settings, waitForSubagents: enabled }
+      setNotificationMode: (draft, mode) => {
+        draft.settings = { ...draft.settings, notificationMode: mode }
       },
       setSoundEnabled: (draft, enabled) => {
         draft.settings = { ...draft.settings, soundEnabled: enabled }

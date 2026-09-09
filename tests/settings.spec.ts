@@ -19,14 +19,21 @@ describe('resolveNotificationSettings', () => {
     expect(resolved.notifyCurrent).toBe(false)
   })
 
-  it('defaults to main-session-only notifications', () => {
+  it('defaults to main-session-only notifications after its subagents', () => {
     const resolved = resolveNotificationSettings(undefined)
-    expect(resolved.mainOnly).toBe(true)
+    expect(resolved.notificationMode).toBe('main-wait')
   })
 
-  it('honors an explicit mainOnly override', () => {
-    const resolved = resolveNotificationSettings({ mainOnly: false })
-    expect(resolved.mainOnly).toBe(false)
+  it('honors an explicit notification mode', () => {
+    expect(resolveNotificationSettings({ notificationMode: 'all' }).notificationMode).toBe('all')
+    expect(resolveNotificationSettings({ notificationMode: 'main' }).notificationMode).toBe('main')
+    expect(resolveNotificationSettings({ notificationMode: 'nonsense' }).notificationMode).toBe('main-wait')
+  })
+
+  it('migrates the legacy mainOnly/waitForSubagents booleans onto modes', () => {
+    expect(resolveNotificationSettings({ mainOnly: false }).notificationMode).toBe('all')
+    expect(resolveNotificationSettings({ mainOnly: true, waitForSubagents: false }).notificationMode).toBe('main')
+    expect(resolveNotificationSettings({ mainOnly: true, waitForSubagents: true }).notificationMode).toBe('main-wait')
   })
 
   it('assigns the default four sounds to the four kinds', () => {

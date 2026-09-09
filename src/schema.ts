@@ -7,7 +7,7 @@
  */
 import z from '@deepseek-ai/schemastery'
 import {
-  DEFAULT_NOTIFICATION_SETTINGS, NOTIFICATION_TYPES, SOUND_IDS,
+  DEFAULT_NOTIFICATION_SETTINGS, NOTIFICATION_MODES, NOTIFICATION_TYPES, SOUND_IDS,
   type NotificationSettings, type NotificationType,
 } from './settings.ts'
 
@@ -33,8 +33,7 @@ const typeSchema: z<PersistedTypeSettings> = z.object({
 export const NotificationSettingsSchema: z<PersistedNotificationSettings> = z.object({
   browserEnabled: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.browserEnabled),
   notifyCurrent: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.notifyCurrent),
-  mainOnly: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.mainOnly),
-  waitForSubagents: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.waitForSubagents),
+  notificationMode: z.union([...NOTIFICATION_MODES]).default(DEFAULT_NOTIFICATION_SETTINGS.notificationMode),
   soundEnabled: z.boolean().default(DEFAULT_NOTIFICATION_SETTINGS.soundEnabled),
   volume: z.number().min(0).max(1).default(DEFAULT_NOTIFICATION_SETTINGS.volume),
   types: z.object({

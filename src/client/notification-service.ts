@@ -23,7 +23,7 @@ import type {
 import type {
   AssistantBlock, TurnErrorNode,
 } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { NotificationSettings, NotificationType, SoundId } from '../settings.ts'
+import type { NotificationMode, NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 
 /** One selectable notification kind (re-export for the settings rows). */
 export type { NotificationType } from '../settings.ts'
@@ -112,46 +112,43 @@ export class NotificationEngine {
   private readonly pendingKeys = new Map<SessionId, string>()
   /** Completions held back until every descendant subagent has finished. */
   private readonly heldCompletions = new Map<SessionId, string>()
-  /** Only the main session alerts (subagents stay silent). Defaults on,
-   *  matching DEFAULT_NOTIFICATION_SETTINGS; wiring syncs the live value. */
-  private mainOnly = true
-  /** Hold a main session's completion while its subagents still run.
-   *  Defaults on, matching DEFAULT_NOTIFICATION_SETTINGS. */
-  private waitForSubagents = true
+  /** Notification scope. Defaults to the durable default; wiring syncs it. */
+  private mode: NotificationMode = 'main-wait'
 
   /** @param ports - injected readers and sink. */
   constructor(private readonly ports: NotificationEnginePorts) {}
 
-  /** Update whether subagent sessions are silenced. */
-  setMainOnly(enabled: boolean): void {
-    this.mainOnly = enabled
-    // Turning main-only back on forgets every tracked subagent so a stale
-    // running edge can never fire for one after the switch.
-    if (enabled) this.forgetSubagents()
-  }
-
-  /** Update whether completions wait for every descendant subagent. */
-  setWaitForSubagents(enabled: boolean): void {
-    this.waitForSubagents = enabled
-    // Turning the wait off releases anything already held.
-    if (!enabled) this.releaseHeld()
+  /** Update the notification scope (which sessions alert, subagent wait). */
+  setNotificationMode(mode: NotificationMode): void {
+    const previous = this.mode
+    this.mode = mode
+    // Silencing subagents forgets their tracking so a stale running edge can
+    // never fire for one after the switch.
+    if (mode !== 'all') this.forgetSubagents()
+    // Leaving the waiting mode releases anything already held.
+    if (previous === 'main-wait' && mode !== 'main-wait') this.releaseHeld()
   }
 
   /** Emit every held completion whose descendants have all settled. */
   private releaseHeld(): void {
     for (const [id, detail] of [...this.heldCompletions]) {
-      if (this.waitForSubagents && this.ports.hasRunningDescendants(id)) continue
+      if (this.waitsFor(id)) continue
       this.heldCompletions.delete(id)
       this.ports.emit({ kind: 'completed', sessionId: id, title: this.ports.titleOf(id), detail })
     }
   }
 
-  /** Whether one session should stay silent under the main-only filter. */
+  /** Whether one session should stay silent (subagents under a main-only mode). */
   private silenced(id: SessionId): boolean {
-    return this.mainOnly && this.ports.isSubagent(id)
+    return this.mode !== 'all' && this.ports.isSubagent(id)
   }
 
-  /** Drop tracking state for every subagent session (main-only was enabled). */
+  /** Whether one completion must wait for its still-running descendants. */
+  private waitsFor(id: SessionId): boolean {
+    return this.mode === 'main-wait' && this.ports.hasRunningDescendants(id)
+  }
+
+  /** Drop tracking state for every subagent session (subagents were silenced). */
   private forgetSubagents(): void {
     for (const id of new Set([...this.prevRunning.keys(), ...this.runs.keys(), ...this.pendingKeys.keys()])) {
       if (!this.ports.isSubagent(id)) continue
@@ -279,7 +276,7 @@ export class NotificationEngine {
       }
       // Hold the completion while descendants still run: the session only
       // paused between subagent waves, so alert when the whole fan-out ends.
-      if (this.waitForSubagents && this.ports.hasRunningDescendants(id)) {
+      if (this.waitsFor(id)) {
         this.heldCompletions.set(id, message)
         return
       }

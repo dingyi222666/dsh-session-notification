@@ -18,9 +18,9 @@ import {
   IconQuestionOutline14, IconWarningOutline16, Menu,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { NotificationsKey } from './locales.ts'
-import { SOUND_IDS } from '../settings.ts'
+import { NOTIFICATION_MODES, SOUND_IDS } from '../settings.ts'
 import type {
-  NotificationType, NotificationTypeSettings, SoundId,
+  NotificationMode, NotificationType, NotificationTypeSettings, SoundId,
 } from '../settings.ts'
 import type { createNotificationsStore } from './settings-store.ts'
 import css from './NotificationsSection.module.css'
@@ -32,10 +32,8 @@ export interface NotificationsSectionInjected {
   setBrowserEnabled: (enabled: boolean) => Promise<void>
   /** Persist whether the current session also alerts. */
   setNotifyCurrent: (enabled: boolean) => void
-  /** Persist whether only the main session alerts (subagents stay silent). */
-  setMainOnly: (enabled: boolean) => void
-  /** Persist whether a main session waits for all its subagents to finish. */
-  setWaitForSubagents: (enabled: boolean) => void
+  /** Persist the notification scope (which sessions alert, subagent wait). */
+  setNotificationMode: (mode: NotificationMode) => void
   /** Persist the sound master switch. */
   setSoundEnabled: (enabled: boolean) => void
   /** Persist the master volume. */
@@ -186,7 +184,7 @@ function VolumeSlider({ value, label, onChange }: {
  * @param props - composed slot props.
  */
 export function NotificationsSection({
-  t, useStore, setBrowserEnabled, setNotifyCurrent, setMainOnly, setWaitForSubagents, setSoundEnabled, setVolume, setType, testSound,
+  t, useStore, setBrowserEnabled, setNotifyCurrent, setNotificationMode, setSoundEnabled, setVolume, setType, testSound,
   requestPermission, testBrowserNotification, uploadCustomSound,
 }: NotificationsSectionProps) {
   const { settings, permission, customSounds } = useStore(state => state)
@@ -240,21 +238,10 @@ export function NotificationsSection({
 
         <li className={css.row}>
           <div className={css.rowText}>
-            <div className={css.rowTitle}>{t('main.title')}</div>
-            <div className={css.desc}>{t('main.desc')}</div>
+            <div className={css.rowTitle}>{t('mode.title')}</div>
           </div>
           <div className={css.rowActions}>
-            <Switch on={settings.mainOnly} label={t('main.title')} onChange={setMainOnly} />
-          </div>
-        </li>
-
-        <li className={css.row}>
-          <div className={css.rowText}>
-            <div className={css.rowTitle}>{t('wait.title')}</div>
-            <div className={css.desc}>{t('wait.desc')}</div>
-          </div>
-          <div className={css.rowActions}>
-            <Switch on={settings.waitForSubagents} label={t('wait.title')} onChange={setWaitForSubagents} />
+            <ModeMenu value={settings.notificationMode} t={t} onSelect={setNotificationMode} />
           </div>
         </li>
 
@@ -365,6 +352,49 @@ function TypeRow({ kind, Icon, title, desc, type, customUrl, t, onTypeChange, on
         }}
       />
     </li>
+  )
+}
+
+/** Notification-scope label per mode. */
+const MODE_KEY: Record<NotificationMode, NotificationsKey> = {
+  all: 'mode.all',
+  main: 'mode.main',
+  'main-wait': 'mode.wait',
+}
+
+/** The notification-scope picker (the official Menu). */
+function ModeMenu({ value, onSelect, t }: {
+  value: NotificationMode
+  onSelect: (mode: NotificationMode) => void
+  t: (key: NotificationsKey) => string
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Menu
+      open={open}
+      onClose={() => { setOpen(false) }}
+      items={NOTIFICATION_MODES.map(mode => ({ id: mode, label: t(MODE_KEY[mode]) }))}
+      selectedId={value}
+      onSelect={(id) => {
+        setOpen(false)
+        onSelect(id as NotificationMode)
+      }}
+      align="end"
+      portal
+      anchor={(
+        <button
+          type="button"
+          className={css.selector}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label={t('mode.title')}
+          onClick={() => { setOpen(value => !value) }}
+        >
+          {t(MODE_KEY[value])}
+          <IconChevronDownOutline14 className={css.chevron} />
+        </button>
+      )}
+    />
   )
 }
 
