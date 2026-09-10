@@ -136,4 +136,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **npm 关联**: package.json 补上 repository / homepage / bugs 字段,npm 上的包由此关联回本仓库,插件市场与精选列表可据此展示下载量',
     ],
   },
+  '0.1.17': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.1.5-rc.1**: @deepseek-ai/dsh-* 依赖升到 ^0.1.5-rc.1;alpha.2→rc.1 仅 17 个提交,唯一有实质改动的 ui-primitives 只调整了 markdown 代码块渲染,插件消费的 Button/Menu/图标导出面不变,代码零改动,typecheck/108 specs/build 全绿',
+    ],
+  },
 }

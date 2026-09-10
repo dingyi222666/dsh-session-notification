@@ -15,7 +15,7 @@ A notification plugin for the dsh web GUI. When a session finishes, hits an erro
 ## Install
 
 ```sh
-# Install from npm (requires dsh >= 0.1.5-alpha.2)
+# Install from npm (requires dsh >= 0.1.5-rc.1)
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # Restart dsh web for it to take effect
 dsh web
@@ -75,7 +75,7 @@ The browser half watches the sessions list snapshot and each session's conversat
 - `yarn run build` — builds the browser bundle (`lib/client.js`) and the Node half (`lib/index.js` / `lib/invariant.js`).
 - `src/client/notification-service.ts` — the engine (classification) and dispatcher (gating); `src/client/settings-store.ts` — the settings section bridge; `src/client/NotificationsSection.tsx` — the section UI; `src/client/sounds.ts` + `src/client/custom-audio.ts` — the built-in and custom sounds.
 - `yarn test` — behavior tests; `yarn run typecheck` — type gate.
-- dsh 0.1.5-alpha.2: the `@deepseek-ai/dsh-*` types install from npm as devDependencies (`^0.1.5-alpha.2`); no checkout path mappings.
+- dsh 0.1.5-rc.1: the `@deepseek-ai/dsh-*` types install from npm as devDependencies (`^0.1.5-rc.1`); no checkout path mappings.
 - Node-half changes need a `dsh web` restart; browser-bundle changes need a rebuild (`yarn run build`) — a `--dev` server hot-reloads them.
 
 ## Known limitations
