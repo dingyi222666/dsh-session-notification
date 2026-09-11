@@ -23,6 +23,7 @@ import type {
 import type {
   AssistantBlock, TurnErrorNode,
 } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import { NOTIFICATION_TAG_PREFIX } from './browser-notify.ts'
 import type { NotificationMode, NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 
 /** One selectable notification kind (re-export for the settings rows). */
@@ -363,7 +364,8 @@ export interface NotificationDispatcherDeps {
   /** Read one kind's custom sound data URL (undefined = use the built-in). */
   customSoundOf: (kind: NotificationType) => string | undefined
   /** Show one system notification; returns whether it was shown. */
-  showBrowser: (title: string, body: string) => boolean
+  /** Show one system notification under the event kind's collapse tag. */
+  showBrowser: (title: string, body: string, tag: string) => boolean
   /** The currently selected session, when one is selected. */
   currentSession: () => SessionId | undefined
   /** Whether the document is hidden (backgrounded). */
@@ -419,6 +421,6 @@ export class NotificationDispatcher {
     }
     if (!settings.browserEnabled) return
     const elsewhere = hidden || !isCurrent || settings.notifyCurrent
-    if (elsewhere) this.deps.showBrowser(title, body)
+    if (elsewhere) this.deps.showBrowser(title, body, `${NOTIFICATION_TAG_PREFIX}:${event.kind}`)
   }
 }

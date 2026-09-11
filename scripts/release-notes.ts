@@ -142,4 +142,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **依赖升级至 0.1.5-rc.1**: @deepseek-ai/dsh-* 依赖升到 ^0.1.5-rc.1;alpha.2→rc.1 仅 17 个提交,唯一有实质改动的 ui-primitives 只调整了 markdown 代码块渲染,插件消费的 Button/Menu/图标导出面不变,代码零改动,typecheck/108 specs/build 全绿',
     ],
   },
+  '0.1.18': {
+    features: [],
+    fixes: [
+      '- **Windows 横幅恢复**: 通知此前共用同一个 tag 且未设 renotify,Windows/Chromium 下同 tag 通知只"静默替换"、不再弹横幅(通知中心里留着未读通知时,后续提醒全都不会弹出来);现在补上 `renotify: true`,并按事件类型分 tag——完成/失败/提问/权限/测试各自一条,同类型仍合并,但每次都会重新弹横幅,不同类型也不会互相顶掉',
+    ],
+  },
 }

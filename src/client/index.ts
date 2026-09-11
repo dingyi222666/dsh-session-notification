@@ -44,7 +44,9 @@ import { DEFAULT_NOTIFICATION_SETTINGS } from '../settings.ts'
 import { createLocalSettingsScope } from './local-settings.ts'
 import { createTabCoordinator } from './tab-coordinator.ts'
 import { SoundPlayer } from './sounds.ts'
-import { browserPermission, requestBrowserPermission, showBrowserNotification } from './browser-notify.ts'
+import {
+  browserPermission, requestBrowserPermission, showBrowserNotification, NOTIFICATION_TAG_PREFIX,
+} from './browser-notify.ts'
 import { MAX_CUSTOM_AUDIO_BYTES, readCustomSound, readFileAsDataUrl, writeCustomSound } from './custom-audio.ts'
 import {
   NotificationDispatcher, NotificationEngine, sessionDetailOf,
@@ -118,7 +120,7 @@ export function apply(ctx: ClientContext): void {
     t: translate,
     playSound: (sound, customUrl) => { playEffective(sound, customUrl) },
     customSoundOf: (kind) => readCustomSound(kind),
-    showBrowser: (title, body) => showBrowserNotification(title, body),
+    showBrowser: (title, body, tag) => showBrowserNotification(title, body, tag),
     currentSession: () => ctx.sessions.list.getSnapshot().current,
     isHidden: () => (typeof document === 'undefined' ? false : document.visibilityState === 'hidden'),
   })
@@ -250,7 +252,7 @@ export function apply(ctx: ClientContext): void {
         bound?.setPermission(await requestBrowserPermission())
       },
       testBrowserNotification: () => {
-        showBrowserNotification(t('test.notification.title'), t('test.notification.body'))
+        showBrowserNotification(t('test.notification.title'), t('test.notification.body'), `${NOTIFICATION_TAG_PREFIX}:test`)
       },
       uploadCustomSound: async (kind, file) => {
         if (file.size > MAX_CUSTOM_AUDIO_BYTES) return

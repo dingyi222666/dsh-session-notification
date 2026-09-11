@@ -48,6 +48,20 @@ describe('page icon in browser notifications', () => {
     expect(created[0].options.icon).toMatch(/\/favicon\.svg$/)
   })
 
+  it('re-alerts when a same-tag notification is replaced (renotify + tag)', () => {
+    const { created } = stubNotification()
+    showBrowserNotification('t', 'b')
+    // Without renotify, Windows/Chromium replace a same-tag card silently.
+    expect((created[0].options as { renotify?: boolean }).renotify).toBe(true)
+    expect(created[0].options.tag).toBe('dsh-session-notification')
+  })
+
+  it('collapses per kind through the caller-supplied tag', () => {
+    const { created } = stubNotification()
+    showBrowserNotification('t', 'b', 'dsh-session-notification:failed')
+    expect(created[0].options.tag).toBe('dsh-session-notification:failed')
+  })
+
   it('prefers the apple-touch-icon over the plain icon', () => {
     addIconLink('icon', '/favicon.svg')
     addIconLink('apple-touch-icon', '/icon-180.png')

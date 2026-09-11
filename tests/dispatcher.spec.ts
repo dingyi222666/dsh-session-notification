@@ -18,11 +18,11 @@ const event = (kind: NotificationEvent['kind'], sessionId = 'a'): NotificationEv
 function makeDeps(overrides: Partial<NotificationDispatcherDeps> = {}): {
   deps: NotificationDispatcherDeps
   sounds: Array<{ sound: SoundId; customUrl?: string }>
-  browser: Array<{ title: string; body: string }>
+  browser: Array<{ title: string; body: string; tag: string }>
   settings: NotificationSettings
 } {
   const sounds: Array<{ sound: SoundId; customUrl?: string }> = []
-  const browser: Array<{ title: string; body: string }> = []
+  const browser: Array<{ title: string; body: string; tag: string }> = []
   const settings: NotificationSettings = structuredClone(DEFAULT_NOTIFICATION_SETTINGS)
   // The shipped default keeps browser notifications off; these tests focus on
   // the browser path, so enable it unless a test flips it off explicitly.
@@ -33,7 +33,7 @@ function makeDeps(overrides: Partial<NotificationDispatcherDeps> = {}): {
       t: (key: string) => (zh as Record<string, string>)[key] ?? key,
       playSound: (sound, customUrl) => { sounds.push(customUrl === undefined ? { sound } : { sound, customUrl }) },
       customSoundOf: () => undefined,
-      showBrowser: (title, body) => { browser.push({ title, body }); return true },
+      showBrowser: (title, body, tag) => { browser.push({ title, body, tag }); return true },
       currentSession: () => undefined,
       isHidden: () => false,
       ...overrides,
@@ -52,6 +52,9 @@ describe('NotificationDispatcher', () => {
     expect(sounds).toEqual([{ sound: 'chime' }])
     expect(browser).toHaveLength(1)
     expect(browser[0].body).toContain('会话 a')
+    // One tag per kind: a same-kind burst collapses, kinds never replace
+    // each other's banner.
+    expect(browser[0].tag).toBe('dsh-session-notification:completed')
   })
 
   it('appends the final completion text to a completed notification body', () => {
