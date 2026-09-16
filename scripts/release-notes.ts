@@ -148,4 +148,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **Windows 横幅恢复**: 通知此前共用同一个 tag 且未设 renotify,Windows/Chromium 下同 tag 通知只"静默替换"、不再弹横幅(通知中心里留着未读通知时,后续提醒全都不会弹出来);现在补上 `renotify: true`,并按事件类型分 tag——完成/失败/提问/权限/测试各自一条,同类型仍合并,但每次都会重新弹横幅,不同类型也不会互相顶掉',
     ],
   },
+  '0.1.19': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.1.6-alpha.1**: @deepseek-ai/dsh-* 依赖升到 ^0.1.6-alpha.1(804 个提交的大版本);逐项核对插件消费的全部运行时面——SessionSnapshot(running/lastAgentError)、SessionSummary/SessionListState(id/parentId/origin/running/displayTitle/current)、uiSession 待交互表、uiConversation 的 binding().target("chat") 与 ChatSnapshot 节点(turn-error/assistant-step)、SettingsScope 契约、slots/store/primitives 导出、以及 slots/locale/sessions/uiConversation/uiSession 五个服务名——全部保持,代码零改动;平台模块表种子不变,bundle externals 仍为四个',
+    ],
+  },
 }
