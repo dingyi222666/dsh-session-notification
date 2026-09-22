@@ -154,4 +154,14 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **依赖升级至 0.1.6-alpha.1**: @deepseek-ai/dsh-* 依赖升到 ^0.1.6-alpha.1(804 个提交的大版本);逐项核对插件消费的全部运行时面——SessionSnapshot(running/lastAgentError)、SessionSummary/SessionListState(id/parentId/origin/running/displayTitle/current)、uiSession 待交互表、uiConversation 的 binding().target("chat") 与 ChatSnapshot 节点(turn-error/assistant-step)、SettingsScope 契约、slots/store/primitives 导出、以及 slots/locale/sessions/uiConversation/uiSession 五个服务名——全部保持,代码零改动;平台模块表种子不变,bundle externals 仍为四个',
     ],
   },
+  '0.1.20': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.1.7-alpha.1**: @deepseek-ai/dsh-* 依赖升到 ^0.1.7-alpha.1,并把 cordis 升到 ^4.0.3、schemastery 升到 ^3.18.3 与 dsh 包的 peer 依赖对齐(此前顶层解析到 3.18.1,与 dsh-settings 期望的 3.18.3 类型不兼容)',
+      '- **会话"当前"判定**: 0.1.7 删除了 SessionListState.current——改为按主视图引用判定(retainedBy.mainView);会话列表其余字段(id/parentId/origin/running/displayTitle)与对话节点(turn-error/assistant-step)不变',
+      '- **待交互订阅**: 0.1.7 把 uiSession 的待交互表合并进 sessionStatus 源(SessionStatusSnapshot:running + pendingInteraction + completionUnread),订阅与问题/权限取值逻辑同步迁移',
+      '- **设置契约更名**: 客户端 SettingsScope 更名为 ConfigForm、settings.register 移除(插件配置表单改由 Loader 条目派生、写入 profile patch);本地偏好作用域改为实现官方 ConfigForm(写入返回 boolean),宿主半区保持惰性',
+      '- **图标命名**: ui-primitives 图标由 16/14 尺寸命名改为 Regular/Medium 笔画命名,按原笔画与尺寸映射(含警示图标显式 size=14)',
+    ],
+  },
 }

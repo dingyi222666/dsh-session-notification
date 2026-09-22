@@ -15,7 +15,7 @@
 ## 安装
 
 ```sh
-# 从 npm 安装（需要 dsh >= 0.1.6-alpha.1）
+# 从 npm 安装（需要 dsh >= 0.1.7-alpha.1）
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web
@@ -24,7 +24,7 @@ dsh web
 一切都在插件自身实现——不依赖 harness（宿主）的任何改动：
 
 - 设置栏目通过客户端 slot 系统（`settings.section`）注册，与官方栏目做法一致。
-- 偏好存在浏览器本地（localStorage）并跨标签页同步；不需要宿主的 `WEB_SETTINGS_NAMESPACES` 或任何其他宿主包改动。（Node 半区仍通过 settings 服务在宿主侧保留 `dsh-session-notification` 命名空间，未放行时它只是占位、无副作用。）
+- 偏好存在浏览器本地（localStorage）并跨标签页同步；不需要宿主设置命名空间或任何其他宿主包改动。（dsh 0.1.7 的插件配置表单直接由 Loader 条目派生，Node 半区已无命名空间可保留，保持惰性。）
 - 设置外壳只给它自己认识的栏目 id 配导航图标，所以「通知」导航行显示的是外壳默认的齿轮。
 
 ## 四种通知类型
@@ -75,7 +75,7 @@ dsh web
 - `yarn run build` —— 构建浏览器包（`lib/client.js`）与 Node 半区（`lib/index.js` / `lib/invariant.js`）。
 - `src/client/notification-service.ts` —— 引擎（事件判定）与分发器（开关/音效/通知门控）；`src/client/settings-store.ts` —— 设置栏桥接；`src/client/NotificationsSection.tsx` —— 设置栏 UI；`src/client/sounds.ts` 与 `src/client/custom-audio.ts` —— 内置与自定义音效。
 - `yarn test` —— 行为测试；`yarn run typecheck` —— 类型门禁。
-- dsh 0.1.6-alpha.1：`@deepseek-ai/dsh-*` 类型作为 devDependencies（`^0.1.6-alpha.1`）从 npm 安装，不再需要检出路径映射。
+- dsh 0.1.7-alpha.1：`@deepseek-ai/dsh-*` 类型作为 devDependencies（`^0.1.7-alpha.1`；`@deepseek-ai/cordis` ^4.0.3、`@deepseek-ai/schemastery` ^3.18.3，与 dsh 包的 peer 依赖一致）从 npm 安装，不再需要检出路径映射。
 - Node 半区改动需要重启 `dsh web`；浏览器包改动重新 `yarn run build` 即可（`--dev` 模式会自动热更新）。
 
 ## 已知限制

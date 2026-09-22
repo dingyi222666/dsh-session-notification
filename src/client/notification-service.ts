@@ -9,7 +9,7 @@
  * dsh 0.1.3-alpha.1 data model: the session snapshot still carries no chat
  * view or pending interaction — the chat view comes from
  * `uiConversation.binding(binding).target('chat')` and pending interactions
- * from `uiSession.pendingInteractions`. The engine's session types now come
+ * from the uiSession session-status source. The engine's session types now come
  * from the api-session-controller client (dsh-client-runtime was dissolved);
  * `AssistantBlock`/`TurnErrorNode` live with the ui-conversation records.
  */
@@ -366,8 +366,8 @@ export interface NotificationDispatcherDeps {
   /** Show one system notification; returns whether it was shown. */
   /** Show one system notification under the event kind's collapse tag. */
   showBrowser: (title: string, body: string, tag: string) => boolean
-  /** The currently selected session, when one is selected. */
-  currentSession: () => SessionId | undefined
+  /** Whether one session is the one currently shown in the main view. */
+  isCurrent: (sessionId: SessionId) => boolean
   /** Whether the document is hidden (backgrounded). */
   isHidden: () => boolean
 }
@@ -394,7 +394,7 @@ export class NotificationDispatcher {
     const settings = this.deps.settings()
     const type = settings.types[event.kind]
     if (!type.enabled) return
-    const isCurrent = this.deps.currentSession() === event.sessionId
+    const isCurrent = this.deps.isCurrent(event.sessionId)
     const hidden = this.deps.isHidden()
     // Not interrupting what you are reading: the current, visible session
     // alerts only when the user opted in.

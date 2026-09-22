@@ -15,7 +15,7 @@ A notification plugin for the dsh web GUI. When a session finishes, hits an erro
 ## Install
 
 ```sh
-# Install from npm (requires dsh >= 0.1.6-alpha.1)
+# Install from npm (requires dsh >= 0.1.7-alpha.1)
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # Restart dsh web for it to take effect
 dsh web
@@ -24,7 +24,7 @@ dsh web
 Everything lives in this plugin — no harness (host) changes:
 
 - The settings section is registered through the client slot system (`settings.section`), exactly like official sections.
-- Preferences persist in the browser (localStorage) and sync across tabs; nothing requires the host's `WEB_SETTINGS_NAMESPACES` or any other host-package change. (The node half still reserves the `dsh-session-notification` namespace host-side through the settings seam; that reservation is inert without exposure.)
+- Preferences persist in the browser (localStorage) and sync across tabs; nothing requires a host settings namespace or any other host-package change. (dsh 0.1.7 derives plugin config forms from Loader entries, so the node half has no namespace to reserve and stays inert.)
 - The settings shell maps only its own section ids to nav icons, so the Notifications nav row shows the shell's default gear.
 
 ## The four notification kinds
@@ -75,7 +75,7 @@ The browser half watches the sessions list snapshot and each session's conversat
 - `yarn run build` — builds the browser bundle (`lib/client.js`) and the Node half (`lib/index.js` / `lib/invariant.js`).
 - `src/client/notification-service.ts` — the engine (classification) and dispatcher (gating); `src/client/settings-store.ts` — the settings section bridge; `src/client/NotificationsSection.tsx` — the section UI; `src/client/sounds.ts` + `src/client/custom-audio.ts` — the built-in and custom sounds.
 - `yarn test` — behavior tests; `yarn run typecheck` — type gate.
-- dsh 0.1.6-alpha.1: the `@deepseek-ai/dsh-*` types install from npm as devDependencies (`^0.1.6-alpha.1`); no checkout path mappings.
+- dsh 0.1.7-alpha.1: the `@deepseek-ai/dsh-*` types install from npm as devDependencies (`^0.1.7-alpha.1`, with `@deepseek-ai/cordis` ^4.0.3 and `@deepseek-ai/schemastery` ^3.18.3 matching the dsh peers); no checkout path mappings.
 - Node-half changes need a `dsh web` restart; browser-bundle changes need a rebuild (`yarn run build`) — a `--dev` server hot-reloads them.
 
 ## Known limitations

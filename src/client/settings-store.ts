@@ -7,9 +7,8 @@
  * reads go through `useStore`.
  */
 import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
-// dsh 0.1.3: the settings-scope contract lives in ui-settings' client face
-// (dsh-client-runtime was dissolved).
-import type { SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
+// dsh 0.1.7-alpha.1: the client settings contract is ConfigForm.
+import type { ConfigFormSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
   type NotificationMode, type NotificationSettings, type NotificationType, type NotificationTypeSettings,
@@ -35,7 +34,7 @@ export interface NotificationsState {
 
 /** Declared action shape giving the exported factory a stable return type. */
 type NotificationsActions = {
-  adopt: (draft: NotificationsState, snapshot: SettingsScopeSnapshot<NotificationSettings>) => void
+  adopt: (draft: NotificationsState, snapshot: ConfigFormSnapshot<NotificationSettings>) => void
   setBrowserEnabled: (draft: NotificationsState, enabled: boolean) => void
   setNotifyCurrent: (draft: NotificationsState, enabled: boolean) => void
   setNotificationMode: (draft: NotificationsState, mode: NotificationMode) => void

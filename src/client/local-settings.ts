@@ -4,24 +4,26 @@
  * The notification preferences are owned end to end by this plugin and
  * persist in the browser (localStorage), so the plugin works against a
  * pristine harness — no host-side settings-namespace exposure, no change to
- * `packages/host/apiproxy` or any other host package. The scope implements the
- * client `SettingsScope` contract from `dsh-client-ui-settings` (snapshot +
- * subscribe + mutate/set/unset — dsh 0.1.3 moved the contract off the deleted
- * dsh-client-runtime and added `mutate`) so the apply world and the section
- * store keep working unchanged; reads resolve through the same
+ * `packages/host/apiproxy` or any other host package. dsh 0.1.7-alpha.1
+ * renamed the client settings contract to `ConfigForm` (schema-derived plugin
+ * config forms over the profile patch); this scope implements that official
+ * contract over localStorage, so nothing else in the plugin depends on the
+ * host settings transport. Reads resolve through the same
  * `resolveNotificationSettings` decoder the host document path used, so
  * hand-edited or malformed storage degrades to the defaults.
  */
-import type {
-  SettingsScope, SettingsScopeSnapshot,
-} from '@deepseek-ai/dsh-client-ui-settings/client'
-// The scope contract's mutation ops (a wire view re-exported by api-remotes);
-// type-only, so no runtime dependency on the settings transport.
-import type { SettingsPathOpView } from '@deepseek-ai/dsh-api-remotes/client'
+// The official client settings-form contract (0.1.7 renamed SettingsScope to
+// ConfigForm; the write methods now settle with a boolean).
+import type { ConfigForm, ConfigFormSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
+// The mutation op shape the contract carries (dsh-settings owns the wire view).
+import type { SettingsPathOpView } from '@deepseek-ai/dsh-settings/types'
 import {
   DEFAULT_NOTIFICATION_SETTINGS, NOTIFICATIONS_NS, resolveNotificationSettings,
   type NotificationSettings,
 } from '../settings.ts'
+
+/** Re-exported for the section store (the official 0.1.7 form snapshot). */
+export type { ConfigFormSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
 
 /** localStorage key holding the whole preferences section. */
 export const LOCAL_STORAGE_KEY = `${NOTIFICATIONS_NS}:preferences`
@@ -51,7 +53,7 @@ function parseStored(raw: string | null): unknown {
  * @returns a scope whose snapshot is `ready` immediately, backed by
  * localStorage when available and by memory otherwise.
  */
-export function createLocalSettingsScope(): SettingsScope<NotificationSettings> {
+export function createLocalSettingsScope(): ConfigForm<NotificationSettings> {
   const listeners = new Set<() => void>()
   const notify = (): void => {
     for (const listener of listeners) listener()
@@ -62,7 +64,7 @@ export function createLocalSettingsScope(): SettingsScope<NotificationSettings> 
   )
   let revision = 1
 
-  const snapshot = (): SettingsScopeSnapshot<NotificationSettings> => ({
+  const snapshot = (): ConfigFormSnapshot<NotificationSettings> => ({
     status: 'ready',
     value,
     base: DEFAULT_NOTIFICATION_SETTINGS,
@@ -103,7 +105,7 @@ export function createLocalSettingsScope(): SettingsScope<NotificationSettings> 
     // The local scope is its own document: fold every op over the stored
     // value (deep set/unset), then validate through the same decoder as any
     // other write so malformed payloads degrade to the defaults.
-    async mutate(ops: readonly SettingsPathOpView[], _expectedRevision?: number): Promise<void> {
+    async mutate(ops: readonly SettingsPathOpView[], _expectedRevision?: number): Promise<boolean> {
       const next = JSON.parse(JSON.stringify(value)) as Record<string, unknown>
       for (const op of ops) {
         if (op.path.length === 0) {
@@ -118,13 +120,16 @@ export function createLocalSettingsScope(): SettingsScope<NotificationSettings> 
         else deepUnset(next, op.path)
       }
       commit(resolveNotificationSettings(next), true)
+      return true
     },
-    async set(field: string, fieldValue: unknown): Promise<void> {
+    async set(field: string, fieldValue: unknown): Promise<boolean> {
       commit(resolveNotificationSettings({ ...value, [field]: fieldValue }), true)
+      return true
     },
-    async unset(field: string): Promise<void> {
+    async unset(field: string): Promise<boolean> {
       const fallback = (DEFAULT_NOTIFICATION_SETTINGS as unknown as Record<string, unknown>)[field]
       commit(resolveNotificationSettings({ ...value, [field]: fallback }), true)
+      return true
     },
   }
 }

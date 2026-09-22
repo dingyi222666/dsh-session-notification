@@ -37,7 +37,7 @@ import type {} from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {
-  SessionPendingInteractionSnapshot,
+  SessionStatusSnapshot,
 } from '@deepseek-ai/dsh-client-ui-session/client'
 import type { NotificationMode, NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 import { DEFAULT_NOTIFICATION_SETTINGS } from '../settings.ts'
@@ -121,7 +121,10 @@ export function apply(ctx: ClientContext): void {
     playSound: (sound, customUrl) => { playEffective(sound, customUrl) },
     customSoundOf: (kind) => readCustomSound(kind),
     showBrowser: (title, body, tag) => showBrowserNotification(title, body, tag),
-    currentSession: () => ctx.sessions.list.getSnapshot().current,
+    // dsh 0.1.7 dropped the list's `current` selection; the main view owns
+    // selection through its reference source, so a session is "the one being
+    // read" while the main-view reference retains it.
+    isCurrent: (id) => (ctx.sessions.retainInfo(id).getSnapshot().retainedBy.mainView ?? 0) > 0,
     isHidden: () => (typeof document === 'undefined' ? false : document.visibilityState === 'hidden'),
   })
 
@@ -129,18 +132,24 @@ export function apply(ctx: ClientContext): void {
     detailOf: (id: SessionId) => {
       const binding = ctx.sessions.binding(id)
       if (binding === undefined) return undefined
-      // The alpha session snapshot carries no chat view: the conversation
-      // nodes live in the uiConversation chat target, materialized only for
-      // opened sessions. Absent it, classification still has lastAgentError.
+      // The session snapshot carries no chat view: the conversation nodes
+      // live in the uiConversation chat target, materialized only for opened
+      // sessions. Absent it, classification still has lastAgentError.
       // (The chat target key and the session snapshot shape are surfaced
       // through their owning packages' type merges; the structural casts keep
-      // this plugin independent of those augmentation orders.)
-      const chatTarget = (ctx.uiConversation.binding(binding) as {
-        target(key: string): { getSnapshot(): unknown }
-      }).target('chat')
-      const chat = chatTarget.getSnapshot() as ChatSnapshotLike | undefined
-      const session = binding.session.getSnapshot() as unknown as SessionSnapshot
-      return sessionDetailOf(session, chat)
+      // this plugin independent of those augmentation orders.) A generation
+      // that ends between the running edge and this read makes the binding
+      // calls throw in 0.1.7, so a failed read degrades to "no detail".
+      try {
+        const chatTarget = (ctx.uiConversation.binding(binding) as {
+          target(key: string): { getSnapshot(): unknown }
+        }).target('chat')
+        const chat = chatTarget.getSnapshot() as ChatSnapshotLike | undefined
+        const session = binding.session.getSnapshot() as unknown as SessionSnapshot
+        return sessionDetailOf(session, chat)
+      } catch {
+        return undefined
+      }
     },
     titleOf: (id: SessionId) => ctx.sessions.list.getSnapshot().byId[id]?.displayTitle ?? id,
     settle: () => new Promise(resolve => setTimeout(resolve, SETTLE_MS)),
@@ -187,11 +196,15 @@ export function apply(ctx: ClientContext): void {
     return unsubscribe
   }, 'dsh-session-notification: session watch')
 
-  // Pending interactions moved off the sessions list in the alpha: observe
-  // the uiSession pending map for question/approval edges instead.
-  const pendingFactsOf = (pending: SessionPendingInteractionSnapshot): Map<SessionId, PendingFacts> => {
+  // dsh 0.1.7 unified the pending-interaction map into the uiSession session
+  // status source (running + pendingInteraction + completionUnread per
+  // session): observe its pendingInteraction values for question/approval
+  // edges.
+  const pendingFactsOf = (statuses: SessionStatusSnapshot): Map<SessionId, PendingFacts> => {
     const out = new Map<SessionId, PendingFacts>()
-    for (const [id, interaction] of pending) {
+    for (const [id, status] of statuses) {
+      const interaction = status.pendingInteraction
+      if (interaction === undefined) continue
       const kind = interaction.kind === 'approval'
         ? 'approval' as const
         : (interaction.kind === 'question' || interaction.kind === 'plan-review')
@@ -205,8 +218,8 @@ export function apply(ctx: ClientContext): void {
     }
     return out
   }
-  ctx.effect(() => ctx.uiSession.pendingInteractions.subscribe(() => {
-    engine.observePending(pendingFactsOf(ctx.uiSession.pendingInteractions.getSnapshot()))
+  ctx.effect(() => ctx.uiSession.sessionStatus.subscribe(() => {
+    engine.observePending(pendingFactsOf(ctx.uiSession.sessionStatus.getSnapshot()))
   }), 'dsh-session-notification: pending watch')
 
   /** Persist one top-level preference through the scope, mirroring optimistically. */

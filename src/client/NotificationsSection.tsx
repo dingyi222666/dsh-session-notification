@@ -14,8 +14,8 @@ import type {
   PropsLocale, PropsRuntime, PropsStore,
 } from '@deepseek-ai/dsh-client-ui-slots'
 import {
-  Button, IconAgentPresetOutline16, IconCheckOutline16, IconChevronDownOutline14,
-  IconQuestionOutline14, IconWarningOutline16, Menu,
+  Button, IconAgentPresetOutlineRegular, IconCheckOutlineRegular, IconChevronDownOutlineRegular,
+  IconQuestionOutlineRegular, IconWarningOutlineRegular, Menu,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { NotificationsKey } from './locales.ts'
 import { NOTIFICATION_MODES, SOUND_IDS } from '../settings.ts'
@@ -60,14 +60,16 @@ export type NotificationsSectionProps =
 /** Kind row metadata: icon, copy keys. */
 const KIND_ROWS: readonly {
   kind: NotificationType
-  Icon: typeof IconCheckOutline16
+  Icon: typeof IconCheckOutlineRegular
+  /** Glyph size override; the warning artwork's default grew 14 -> 16 in 0.1.7. */
+  size?: number
   title: NotificationsKey
   desc: NotificationsKey
 }[] = [
-  { kind: 'completed', Icon: IconCheckOutline16, title: 'type.completed.title', desc: 'type.completed.desc' },
-  { kind: 'failed', Icon: IconWarningOutline16, title: 'type.failed.title', desc: 'type.failed.desc' },
-  { kind: 'question', Icon: IconQuestionOutline14, title: 'type.question.title', desc: 'type.question.desc' },
-  { kind: 'permission', Icon: IconAgentPresetOutline16, title: 'type.permission.title', desc: 'type.permission.desc' },
+  { kind: 'completed', Icon: IconCheckOutlineRegular, title: 'type.completed.title', desc: 'type.completed.desc' },
+  { kind: 'failed', Icon: IconWarningOutlineRegular, size: 14, title: 'type.failed.title', desc: 'type.failed.desc' },
+  { kind: 'question', Icon: IconQuestionOutlineRegular, title: 'type.question.title', desc: 'type.question.desc' },
+  { kind: 'permission', Icon: IconAgentPresetOutlineRegular, title: 'type.permission.title', desc: 'type.permission.desc' },
 ]
 
 /** Sound menu entries: the four effects, Custom, then None. */
@@ -266,11 +268,12 @@ export function NotificationsSection({
           </div>
         </li>
 
-        {KIND_ROWS.map(({ kind, Icon, title, desc }) => (
+        {KIND_ROWS.map(({ kind, Icon, size, title, desc }) => (
           <TypeRow
             key={kind}
             kind={kind}
             Icon={Icon}
+            iconSize={size}
             title={t(title)}
             desc={t(desc)}
             type={settings.types[kind]}
@@ -294,9 +297,10 @@ export function NotificationsSection({
 }
 
 /** One notification-kind row: icon, copy, preview, picker (Custom included), switch. */
-function TypeRow({ kind, Icon, title, desc, type, customUrl, t, onTypeChange, onTest, onUpload }: {
+function TypeRow({ kind, Icon, iconSize, title, desc, type, customUrl, t, onTypeChange, onTest, onUpload }: {
   kind: NotificationType
-  Icon: typeof IconCheckOutline16
+  Icon: typeof IconCheckOutlineRegular
+  iconSize?: number
   title: string
   desc: string
   type: NotificationTypeSettings
@@ -321,7 +325,7 @@ function TypeRow({ kind, Icon, title, desc, type, customUrl, t, onTypeChange, on
   }
   return (
     <li className={css.row}>
-      <Icon className={css.rowIcon} aria-hidden="true" />
+      <Icon className={css.rowIcon} size={iconSize} aria-hidden="true" />
       <div className={css.rowText}>
         <div className={css.rowTitle}>{title}</div>
         <div className={css.desc}>{desc}</div>
@@ -392,7 +396,7 @@ function ModeMenu({ value, onSelect, t }: {
           onClick={() => { setOpen(value => !value) }}
         >
           {t(MODE_KEY[value])}
-          <IconChevronDownOutline14 className={css.chevron} />
+          <IconChevronDownOutlineRegular className={css.chevron} />
         </button>
       )}
     />
@@ -431,7 +435,7 @@ function SoundMenu({ value, onSelect, t }: {
           onClick={() => { setOpen(value => !value) }}
         >
           {t(SOUND_KEY[value])}
-          <IconChevronDownOutline14 className={css.chevron} />
+          <IconChevronDownOutlineRegular className={css.chevron} />
         </button>
       )}
     />

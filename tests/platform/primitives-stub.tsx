@@ -51,11 +51,9 @@ export function Button({ variant, size, className, children, ...rest }: {
   )
 }
 
-/** Icon stubs: the section only needs their presence. */
-export const IconAgentPresetOutline16 = () => null
-export const IconChevronDownOutline14 = () => null
-export const IconCheckOutline16 = () => null
-export const IconChecklistOutline14 = () => null
-export const IconQuestionOutline14 = () => null
-export const IconTrashOutline16 = () => null
-export const IconWarningOutline16 = () => null
+/** Icon stubs: the section only needs their presence (0.1.7 Regular weights). */
+export const IconAgentPresetOutlineRegular = (_props: { size?: number; className?: string }) => null
+export const IconChevronDownOutlineRegular = (_props: { size?: number; className?: string }) => null
+export const IconCheckOutlineRegular = (_props: { size?: number; className?: string }) => null
+export const IconQuestionOutlineRegular = (_props: { size?: number; className?: string }) => null
+export const IconWarningOutlineRegular = (_props: { size?: number; className?: string }) => null
