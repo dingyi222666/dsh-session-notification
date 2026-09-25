@@ -164,4 +164,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **图标命名**: ui-primitives 图标由 16/14 尺寸命名改为 Regular/Medium 笔画命名,按原笔画与尺寸映射(含警示图标显式 size=14)',
     ],
   },
+  '0.1.21': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.1.7-rc.2**: @deepseek-ai/dsh-* 依赖升到 ^0.1.7-rc.2,cordis/schemastery 对齐 vendor 版本(^4.0.4 / ^3.18.4);alpha.1→rc.2 的 664 个提交改动了会话快照、对话记录、图标等内部结构,但逐项核对插件消费的运行时面——SessionSnapshot.lastAgentError、SessionSummary(running/displayTitle/parentId/origin)、SessionStatus.pendingInteraction、uiConversation 的 chat target 与 assistant-step.blocks / turn-error.seq+message、settings.section 席位——全部保持,代码零改动,typecheck/110 specs/build 全绿',
+    ],
+  },
 }
