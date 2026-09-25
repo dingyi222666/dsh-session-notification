@@ -36,7 +36,7 @@ Everything lives in this plugin — no harness (host) changes:
 | Question asked | The agent is waiting for your answer (`question/requested`) | pop |
 | Permission requested | The agent requests an authorized operation (`approval/requested`) | alert |
 
-Each kind can be enabled or disabled and reassigned to any of the four built-in sound effects (or muted). The four sounds are synthesized with Web Audio — no audio files are shipped — and the master volume is adjustable with the official-style slider (0–100%). A fixed loudness boost (~+6 dB) with a soft limiter on the playback chain makes every sound noticeably louder without distortion; custom audio feeds the same chain.
+Each kind can be enabled or disabled and reassigned to any of the four built-in sound effects (or muted). The four sounds are synthesized with Web Audio — no audio files are shipped — and the master volume is adjustable with the official-style slider (0–100%). A fixed loudness boost (~+6 dB) with a soft limiter on the playback chain makes every sound noticeably louder without distortion; custom audio feeds the same chain. The shared AudioContext is suspended as soon as playback is over and resumed by the next sound, so an idle notification never keeps the system audio stream (or a macOS sleep assertion) open.
 
 ## Custom audio
 

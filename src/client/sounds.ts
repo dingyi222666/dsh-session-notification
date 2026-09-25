@@ -71,10 +71,27 @@ export function patternDuration(pattern: SoundPattern): number {
  *  and the soft limiter after it catches the overs instead of hard-clipping. */
 const LOUDNESS_BOOST = 2
 
+/** Lead time between `currentTime` and the first scheduled note. */
+const START_LEAD_SECONDS = 0.02
+/** Released-oscillator tail kept alive after a note's nominal duration. */
+const NOTE_TAIL_SECONDS = 0.05
+/** Quiet margin before the idle suspend, covering gain release and device latency. */
+const IDLE_SUSPEND_MARGIN_SECONDS = 0.55
+/** Margin after a custom element or final oscillator ends before suspending. */
+const CUSTOM_IDLE_MARGIN_SECONDS = 0.25
+
 /**
  * Web Audio player. The AudioContext is created lazily on the first play and
- * reused; a suspended context (autoplay policy) is resumed on every play, so
- * sound starts working as soon as the user has interacted with the page.
+ * reused; a suspended context is resumed on every play (including the autoplay
+ * policy's initial suspension), so sound starts working as soon as the user
+ * has interacted with the page.
+ *
+ * The context is suspended again once the playback is over — a running
+ * AudioContext holds a system output stream (and, on macOS, a
+ * `PreventUserIdleSystemSleep` assertion) for as long as it lives, which would
+ * pin the machine awake for the whole tab lifetime after a single chime
+ * (issue #6). Built-in patterns use their known duration; custom audio uses
+ * the element's `ended` event.
  *
  * Signal chain: per-note gain → master (volume) → loudness boost → soft
  * limiter → destination. The boost raises every sound by a fixed amount at
@@ -84,6 +101,11 @@ const LOUDNESS_BOOST = 2
 export class SoundPlayer {
   private context: AudioContext | undefined
   private master: GainNode | undefined
+  /** Pending idle-suspend timer; every new playback clears it. */
+  private idleTimer: ReturnType<typeof setTimeout> | undefined
+  /** Current custom-audio element and its per-play source node. */
+  private customAudio: HTMLAudioElement | undefined
+  private customSource: MediaElementAudioSourceNode | undefined
 
   /**
    * @param volume - reads the current master volume in [0, 1] at play time.
@@ -100,8 +122,10 @@ export class SoundPlayer {
     const context = this.ensureContext()
     if (context === undefined || this.master === undefined) return
     const pattern = SOUND_PATTERNS[sound]
-    const start = context.currentTime + 0.02
+    const start = context.currentTime + START_LEAD_SECONDS
     this.master.gain.setValueAtTime(clampVolume(this.volume()), start)
+    let finalOscillator: OscillatorNode | undefined
+    let finalStop = Number.NEGATIVE_INFINITY
     for (const note of pattern.notes) {
       const oscillator = context.createOscillator()
       const gain = context.createGain()
@@ -112,9 +136,26 @@ export class SoundPlayer {
       gain.gain.linearRampToValueAtTime(note.gain, at + 0.01)
       gain.gain.exponentialRampToValueAtTime(0.001, at + note.duration)
       oscillator.connect(gain).connect(this.master)
+      const stop = at + note.duration + NOTE_TAIL_SECONDS
       oscillator.start(at)
-      oscillator.stop(at + note.duration + 0.05)
+      oscillator.stop(stop)
+      if (stop > finalStop) {
+        finalStop = stop
+        finalOscillator = oscillator
+      }
     }
+    // A running AudioContext keeps a system output stream (and, on macOS, a
+    // PreventUserIdleSystemSleep assertion) alive for as long as it lives, so
+    // the context returns to `suspended` once the pattern is over and is
+    // resumed by the next play. See issue #6. The final oscillator's `ended`
+    // event is the precise, unthrottled trigger; the scheduled estimate is the
+    // fallback for contexts that never reach it.
+    finalOscillator?.addEventListener('ended', () => {
+      this.scheduleIdleSuspend(CUSTOM_IDLE_MARGIN_SECONDS)
+    }, { once: true })
+    this.scheduleIdleSuspend(
+      START_LEAD_SECONDS + patternDuration(pattern) + NOTE_TAIL_SECONDS + IDLE_SUSPEND_MARGIN_SECONDS,
+    )
   }
 
   /** Create (or resume) the shared context; undefined outside browsers. */
@@ -146,6 +187,10 @@ export class SoundPlayer {
    * capped at the element's own volume (browser maximum 1.0). When the source
    * cannot be created (unusual browsers), the element plays at the master
    * volume as a fallback.
+   *
+   * The element's length is unknown, so the idle suspend hangs off `ended`:
+   * when playback stops (or is refused) the per-play source is disconnected so
+   * nodes do not accumulate, and the shared context is suspended again.
    * @param dataUrl - the audio data URL.
    */
   playCustom(dataUrl: string): void {
@@ -158,14 +203,68 @@ export class SoundPlayer {
       void audio.play().catch(() => { /* autoplay rejection is silent */ })
       return
     }
+    this.releaseCustomSource()
     const audio = new Audio(dataUrl)
+    this.customAudio = audio
     try {
       const source = context.createMediaElementSource(audio)
       source.connect(this.master)
+      this.customSource = source
     } catch (_sourceFailed) {
       audio.volume = clampVolume(this.volume())
     }
-    void audio.play().catch(() => { /* autoplay rejection is silent */ })
+    /** Finish this play: drop its source, then let the context go idle. */
+    const release = (): void => {
+      // A newer playback (or a dispose) superseded this element.
+      if (this.customAudio !== audio) return
+      this.releaseCustomSource()
+      this.scheduleIdleSuspend(CUSTOM_IDLE_MARGIN_SECONDS)
+    }
+    audio.addEventListener('ended', release, { once: true })
+    audio.addEventListener('error', release, { once: true })
+    void audio.play().catch(() => {
+      // Autoplay policy refused playback; nothing is audible, so release the
+      // source and return the context to idle instead of holding the stream.
+      release()
+    })
+  }
+
+  /**
+   * Release every audio resource this player owns: the pending idle timer, the
+   * live custom source, and the shared context. Called when the plugin unloads
+   * so an unloaded page never keeps a system output stream (or its power
+   * assertion) alive.
+   */
+  dispose(): void {
+    this.clearIdleSuspend()
+    this.releaseCustomSource()
+    const context = this.context
+    this.context = undefined
+    this.master = undefined
+    if (context !== undefined && context.state !== 'closed') void context.close()
+  }
+
+  /** Disconnect and forget the live custom-audio source, if any. */
+  private releaseCustomSource(): void {
+    this.customSource?.disconnect()
+    this.customSource = undefined
+    this.customAudio = undefined
+  }
+
+  /** Schedule the idle suspend, replacing any pending one. */
+  private scheduleIdleSuspend(delaySeconds: number): void {
+    this.clearIdleSuspend()
+    this.idleTimer = setTimeout(() => {
+      this.idleTimer = undefined
+      if (this.context?.state === 'running') void this.context.suspend()
+    }, Math.max(0, delaySeconds) * 1000)
+  }
+
+  /** Cancel a pending idle suspend. */
+  private clearIdleSuspend(): void {
+    if (this.idleTimer === undefined) return
+    clearTimeout(this.idleTimer)
+    this.idleTimer = undefined
   }
 }
 

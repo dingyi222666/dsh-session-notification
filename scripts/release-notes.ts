@@ -170,4 +170,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **依赖升级至 0.1.7-rc.2**: @deepseek-ai/dsh-* 依赖升到 ^0.1.7-rc.2,cordis/schemastery 对齐 vendor 版本(^4.0.4 / ^3.18.4);alpha.1→rc.2 的 664 个提交改动了会话快照、对话记录、图标等内部结构,但逐项核对插件消费的运行时面——SessionSnapshot.lastAgentError、SessionSummary(running/displayTitle/parentId/origin)、SessionStatus.pendingInteraction、uiConversation 的 chat target 与 assistant-step.blocks / turn-error.seq+message、settings.section 席位——全部保持,代码零改动,typecheck/110 specs/build 全绿',
     ],
   },
+  '0.1.22': {
+    features: [],
+    fixes: [
+      '- **提示音不再阻止睡眠(#6)**: 共享 AudioContext 此前创建后永不挂起,处于 running 的上下文会让系统音频流(以及 macOS 的 PreventUserIdleSystemSleep 断言)一直存活到标签页关闭——单次 0.5 秒提示音实测挂住 17 小时不断电;现在内置音效在最后一个振荡器 ended(以排程时长为兜底定时器)后挂起,自定义音频在 ended/error/自动播放被拒时挂起,并断开每次播放的 MediaElementSource(节点不再累积);插件卸载时关闭上下文;音量 0 或静音开关也不再长期占用音频流',
+    ],
+  },
 }

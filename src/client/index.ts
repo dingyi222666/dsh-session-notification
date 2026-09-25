@@ -103,6 +103,9 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => scope.subscribe(() => { bound?.adopt(scope.getSnapshot()) }), 'dsh-session-notification: scope adoption')
 
   const player = new SoundPlayer(() => currentSettings().volume)
+  // Release the shared AudioContext (and any preview still holding it) when
+  // the plugin unloads; a live context keeps a system audio stream open.
+  ctx.effect(() => () => player.dispose(), 'dsh-session-notification: sound player')
   // Cross-tab arbiter: one open tab wins each event, so N tabs do not ring N
   // times; a visible tab takes the event ahead of a background one.
   const coordinator = createTabCoordinator()
