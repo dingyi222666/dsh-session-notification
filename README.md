@@ -15,7 +15,7 @@ A notification plugin for the dsh web GUI. When a session finishes, hits an erro
 ## Install
 
 ```sh
-# Install from npm (requires dsh >= 0.1.7-rc.2)
+# Install from npm (requires dsh >= 0.2.0-rc.1)
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # Restart dsh web for it to take effect
 dsh web
@@ -48,6 +48,12 @@ Browser (system-level) notifications are **off by default**; turning the switch 
 
 **Notify for** picks the scope (default **Main, after subagents**): *All sessions* alerts for every session including subagents; *Main only* alerts for the main session as soon as it goes idle; *Main, after subagents* holds that alert until every subagent the main session spawned has finished, so a run that only paused between subagent waves never interrupts you early (failures always alert immediately).
 
+## Desktop app
+
+The plugin runs unchanged inside the dsh desktop application — the Electron shell loads the same Web client and plugin graph. Desktop notifications are **native OS notifications**: the shell grants notification permission by default, so turning **Browser notifications** on is enough and no permission prompt appears. A notification carries the **application icon** (the page favicon is used on Web; under `dsh-app://` the page icon is skipped so the packaged app icon shows instead), is marked **silent** so the OS alert sound never doubles the plugin's own sound, and clicking one restores and focuses the window through the shell's app activation — closing the window only hides it.
+
+The desktop app owns `$DSH_HOME/profiles/desktop` and the CLI refuses to manage it, so install the plugin from the app's **Plugins** page (Settings → Plugins) instead of `dsh plugin --profile desktop`. Preferences are browser-local to that renderer, so they are separate from the Web profile's.
+
 ## The Notifications settings section
 
 The plugin registers a **Notifications** section in the settings panel (Settings ⚙ → Notifications):
@@ -75,7 +81,7 @@ The browser half watches the sessions list snapshot and each session's conversat
 - `yarn run build` — builds the browser bundle (`lib/client.js`) and the Node half (`lib/index.js` / `lib/invariant.js`).
 - `src/client/notification-service.ts` — the engine (classification) and dispatcher (gating); `src/client/settings-store.ts` — the settings section bridge; `src/client/NotificationsSection.tsx` — the section UI; `src/client/sounds.ts` + `src/client/custom-audio.ts` — the built-in and custom sounds.
 - `yarn test` — behavior tests; `yarn run typecheck` — type gate.
-- dsh 0.1.7-rc.2: the `@deepseek-ai/dsh-*` types install from npm as devDependencies (`^0.1.7-rc.2`, with `@deepseek-ai/cordis` ^4.0.4 and `@deepseek-ai/schemastery` ^3.18.4 matching the vendored framework); no checkout path mappings.
+- dsh 0.2.0-rc.1: the `@deepseek-ai/dsh-*` types install from npm as devDependencies (`^0.2.0-rc.1`, with `@deepseek-ai/cordis` ~4.0.4 and `@deepseek-ai/schemastery` ~3.18.4 matching the dsh peers); no checkout path mappings.
 - Node-half changes need a `dsh web` restart; browser-bundle changes need a rebuild (`yarn run build`) — a `--dev` server hot-reloads them.
 
 ## Known limitations

@@ -48,6 +48,42 @@ describe('page icon in browser notifications', () => {
     expect(created[0].options.icon).toMatch(/\/favicon\.svg$/)
   })
 
+  it('marks desktop notifications silent so the OS sound does not double ours', () => {
+    vi.stubGlobal('dshDesktop', { protocolVersion: 1 })
+    const { created } = stubNotification()
+    expect(showBrowserNotification('t', 'b')).toBe(true)
+    expect((created[0].options as { silent?: boolean }).silent).toBe(true)
+  })
+
+  it('leaves the silent flag to the browser outside the desktop shell', () => {
+    const { created } = stubNotification()
+    showBrowserNotification('t', 'b')
+    expect((created[0].options as { silent?: boolean }).silent).toBeUndefined()
+  })
+
+  it('ignores a data: SVG icon the native layer cannot rasterize', () => {
+    addIconLink('icon', 'data:image/svg+xml,%3Csvg%3E%3C/svg%3E')
+    const { created } = stubNotification()
+    expect(showBrowserNotification('t', 'b')).toBe(true)
+    expect(created[0].options.icon).toBeUndefined()
+  })
+
+  it('keeps a raster data: icon', () => {
+    addIconLink('icon', 'data:image/png;base64,AAAA')
+    const { created } = stubNotification()
+    expect(showBrowserNotification('t', 'b')).toBe(true)
+    expect(created[0].options.icon).toMatch(/^data:image\/png/)
+  })
+
+  it('ignores a custom-scheme (desktop dsh-app:) page icon', () => {
+    addIconLink('icon', 'dsh-app://app/favicon.svg')
+    const { created } = stubNotification()
+    expect(showBrowserNotification('t', 'b')).toBe(true)
+    // No icon passed: the native layer falls back to the app icon instead of
+    // trying to fetch a URL it cannot rasterize.
+    expect(created[0].options.icon).toBeUndefined()
+  })
+
   it('re-alerts when a same-tag notification is replaced (renotify + tag)', () => {
     const { created } = stubNotification()
     showBrowserNotification('t', 'b')

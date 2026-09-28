@@ -39,6 +39,35 @@ export async function requestBrowserPermission(): Promise<BrowserPermission> {
   return permission
 }
 
+/** Schemes a native notification layer can fetch an icon from. */
+const ICON_URL_SCHEME = /^(?:https?|blob):/i
+
+/**
+ * A `data:` icon is usable only when it carries a raster image: native
+ * notification layers decode bitmaps and never rasterize SVG documents.
+ */
+const RASTER_DATA_ICON = /^data:image\/(?!svg)/i
+
+/** One declared icon link, or undefined when absent or unusable natively. */
+function iconUrlOf(link: HTMLLinkElement | null): string | undefined {
+  if (link === null || link.href.length === 0) return undefined
+  // The desktop shell serves its page from `dsh-app://` and declares SVG
+  // favicons; neither is fetchable/decodable by the native notification
+  // layer, so skipping them lets Electron fall back to the packaged
+  // application icon instead of dropping or retrying the alert.
+  if (ICON_URL_SCHEME.test(link.href)) return link.href
+  return RASTER_DATA_ICON.test(link.href) ? link.href : undefined
+}
+
+/**
+ * Whether this page runs inside the dsh desktop (Electron) shell. The official
+ * client code detects it the same way (`dshDesktop` comes from the desktop
+ * preload); the main frame always carries it.
+ */
+export function isDesktopShell(): boolean {
+  return typeof globalThis !== 'undefined' && 'dshDesktop' in globalThis
+}
+
 /**
  * Resolve the current page's own icon (favicon) as an absolute URL, preferring
  * the largest declared one (`apple-touch-icon` over `rel=icon`). `link.href`
@@ -47,11 +76,8 @@ export async function requestBrowserPermission(): Promise<BrowserPermission> {
  */
 function pageIconUrl(): string | undefined {
   if (typeof document === 'undefined') return undefined
-  const appleTouch = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
-  if (appleTouch !== null && appleTouch.href.length > 0) return appleTouch.href
-  const icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
-  if (icon !== null && icon.href.length > 0) return icon.href
-  return undefined
+  return iconUrlOf(document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]'))
+    ?? iconUrlOf(document.querySelector<HTMLLinkElement>('link[rel~="icon"]'))
 }
 
 /**
@@ -86,6 +112,11 @@ export function showBrowserNotification(
     body,
     tag,
     renotify: true,
+    // The desktop shell forwards `silent` to the native notification, and its
+    // own notifications set it: without it the OS alert sound plays on top of
+    // this plugin's Web Audio sound. On the Web the notification sound stays
+    // the browser's business, as before.
+    ...(isDesktopShell() ? { silent: true } : {}),
     ...(icon === undefined ? {} : { icon }),
   }
   try {

@@ -176,4 +176,12 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **提示音不再阻止睡眠(#6)**: 共享 AudioContext 此前创建后永不挂起,处于 running 的上下文会让系统音频流(以及 macOS 的 PreventUserIdleSystemSleep 断言)一直存活到标签页关闭——单次 0.5 秒提示音实测挂住 17 小时不断电;现在内置音效在最后一个振荡器 ended(以排程时长为兜底定时器)后挂起,自定义音频在 ended/error/自动播放被拒时挂起,并断开每次播放的 MediaElementSource(节点不再累积);插件卸载时关闭上下文;音量 0 或静音开关也不再长期占用音频流',
     ],
   },
+  '0.2.0': {
+    features: [
+      '- **桌面端通知支持**: 插件在 dsh 桌面应用(Electron 外壳,加载同一套 Web 客户端与插件图)中原样运行;桌面通知即系统原生通知——外壳默认授予通知权限,打开开关即生效、不再弹授权框;通知使用应用图标(`dsh-app://` 与 `data:` SVG 等原生层无法栅格化的图标会被跳过,让打包应用图标生效),并在系统层标记 silent——Electron 会转发该标志,避免系统通知音与插件提示音叠加成「双响」;点击通知经外壳的应用激活恢复并聚焦窗口(关窗只是隐藏);README 补充桌面端安装方式:由桌面应用的「插件」页面安装(desktop profile 由 Electron 独占,CLI 拒绝管理)',
+    ],
+    fixes: [
+      '- **依赖升级至 0.2.0-rc.1**: @deepseek-ai/dsh-* 依赖升到 ^0.2.0-rc.1(cordis/schemastery 对齐 ~4.0.4 / ~3.18.4 peer);0.1.7-rc.2→0.2.0-rc.1 的 261 个提交集中在会话控制器契约与 composer/draft 输入契约,插件消费的面(SessionSnapshot.lastAgentError、SessionSummary 字段、SessionStatus.pendingInteraction、chat target 与 assistant-step.blocks / turn-error.seq+message、settings.section 席位、ConfigForm 契约、平台模块表)全部保持,仅新增桌面通知的图标 scheme 处理',
+    ],
+  },
 }

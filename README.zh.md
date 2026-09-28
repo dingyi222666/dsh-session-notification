@@ -15,7 +15,7 @@
 ## 安装
 
 ```sh
-# 从 npm 安装（需要 dsh >= 0.1.7-rc.2）
+# 从 npm 安装（需要 dsh >= 0.2.0-rc.1）
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web
@@ -48,6 +48,12 @@ dsh web
 
 **「通知范围」**三选一（默认 **主会话 + 等子会话**）：*全部会话* 连子会话一起提醒；*只主会话* 主会话一结束就提醒；*主会话 + 等子会话* 则等它派生的所有子会话都跑完再提醒一次，中间的空档不会提前打断你（失败仍然立即提醒）。
 
+## 桌面端（Desktop）
+
+插件在 dsh 桌面应用（Electron 外壳）里原样运行——外壳加载的是同一套 Web 客户端与插件图。桌面通知走**系统原生通知**：外壳默认授予通知权限，因此打开「浏览器通知」开关即可，不会再弹授权框。通知使用**应用图标**（网页端用页面 favicon；`dsh-app://` 下会跳过页面图标，让打包后的应用图标生效），并在系统层标记为**静音**——插件的 Web Audio 是唯一音源，系统通知音不会和提示音叠加；点击通知会经外壳的应用激活恢复并聚焦窗口——关闭窗口只是隐藏、不会退出。
+
+desktop profile（`$DSH_HOME/profiles/desktop`）由桌面应用独占，CLI 会拒绝管理，因此请从桌面应用的 **设置 → 插件（Plugins）** 页面安装本插件，而不是 `dsh plugin --profile desktop`。偏好存在该渲染进程本地，与 Web profile 相互独立。
+
 ## 通知设置栏
 
 插件在设置面板注册了一个「**通知**」栏目（设置 ⚙ → 通知）：
@@ -75,7 +81,7 @@ dsh web
 - `yarn run build` —— 构建浏览器包（`lib/client.js`）与 Node 半区（`lib/index.js` / `lib/invariant.js`）。
 - `src/client/notification-service.ts` —— 引擎（事件判定）与分发器（开关/音效/通知门控）；`src/client/settings-store.ts` —— 设置栏桥接；`src/client/NotificationsSection.tsx` —— 设置栏 UI；`src/client/sounds.ts` 与 `src/client/custom-audio.ts` —— 内置与自定义音效。
 - `yarn test` —— 行为测试；`yarn run typecheck` —— 类型门禁。
-- dsh 0.1.7-rc.2：`@deepseek-ai/dsh-*` 类型作为 devDependencies（`^0.1.7-rc.2`；`@deepseek-ai/cordis` ^4.0.4、`@deepseek-ai/schemastery` ^3.18.4，与 vendor 的框架版本一致）从 npm 安装，不再需要检出路径映射。
+- dsh 0.2.0-rc.1：`@deepseek-ai/dsh-*` 类型作为 devDependencies（`^0.2.0-rc.1`；`@deepseek-ai/cordis` ~4.0.4、`@deepseek-ai/schemastery` ~3.18.4，与 dsh 包的 peer 依赖一致）从 npm 安装，不再需要检出路径映射。
 - Node 半区改动需要重启 `dsh web`；浏览器包改动重新 `yarn run build` 即可（`--dev` 模式会自动热更新）。
 
 ## 已知限制
