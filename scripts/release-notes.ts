@@ -184,4 +184,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **依赖升级至 0.2.0-rc.1**: @deepseek-ai/dsh-* 依赖升到 ^0.2.0-rc.1(cordis/schemastery 对齐 ~4.0.4 / ~3.18.4 peer);0.1.7-rc.2→0.2.0-rc.1 的 261 个提交集中在会话控制器契约与 composer/draft 输入契约,插件消费的面(SessionSnapshot.lastAgentError、SessionSummary 字段、SessionStatus.pendingInteraction、chat target 与 assistant-step.blocks / turn-error.seq+message、settings.section 席位、ConfigForm 契约、平台模块表)全部保持,仅新增桌面通知的图标 scheme 处理',
     ],
   },
+  '0.2.1': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.2.0-rc.2**: @deepseek-ai/dsh-* 依赖升到 ^0.2.0-rc.2(peer 仍为 cordis ~4.0.4 / schemastery ~3.18.4);rc.1→rc.2 的 187 个提交集中在桌面端命令安装/管理与 desktop-host CLI,通知链路(权限默认放行、dshDesktop 桥、Electron 通知转发)与插件消费的所有 API 面均未变化,图标(Regular 家族)也全部保留,代码零改动,typecheck/123 specs/build 全绿',
+    ],
+  },
 }
