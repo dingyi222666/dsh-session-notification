@@ -68,6 +68,13 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
+declare module '@deepseek-ai/dsh-api-session-controller/client' {
+  interface SessionReferenceSourceMap {
+    /** Reference held while one notification classification reads a session. */
+    sessionNotification: unknown
+  }
+}
+
 /** Dictionary namespace owned by this plugin. */
 const NS = 'notifications'
 
@@ -77,7 +84,7 @@ const SETTLE_MS = 250
 /** Required services: the slot registry, dictionaries, the session list, the
  *  alpha chat view (uiConversation), and the pending-interaction map
  *  (uiSession). */
-export const inject = ['slots', 'locale', 'sessions', 'uiConversation', 'uiSession']
+export const inject = ['slots', 'locale', 'sessions', 'uiConversation', 'uiSession', 'uiWorkspace']
 
 /**
  * Client plugin body: bind the browser-local preferences scope, register the
@@ -110,15 +117,6 @@ export function apply(ctx: ClientContext): void {
   // the plugin unloads; a live context keeps a system audio stream open.
   ctx.effect(() => () => player.dispose(), 'dsh-session-notification: sound player')
 
-  // Optional navigation capability: clicking a notification returns to the
-  // session that raised it. The service is injected optionally so a
-  // composition without the workspace UI still activates this plugin (the
-  // click then only focuses the page).
-  let openSession: ((sessionId: SessionId) => void) | undefined
-  ctx.inject(['uiWorkspace'], (workspaceCtx) => {
-    openSession = (sessionId) => { workspaceCtx.uiWorkspace.openSession(sessionId) }
-    return () => { openSession = undefined }
-  })
   // Cross-tab arbiter: one open tab wins each event, so N tabs do not ring N
   // times; a visible tab takes the event ahead of a background one.
   const coordinator = createTabCoordinator()
@@ -137,7 +135,11 @@ export function apply(ctx: ClientContext): void {
     playSound: (sound, customUrl) => { playEffective(sound, customUrl) },
     customSoundOf: (kind) => readCustomSound(kind),
     showBrowser: (title, body, tag, sessionId) => showBrowserNotification(title, body, tag, () => {
-      openSession?.(sessionId)
+      try {
+        ctx.uiWorkspace.openSession(sessionId)
+      } catch (error) {
+        console.warn('[dsh-session-notification] could not open the notification session', sessionId, error)
+      }
     }),
     // dsh 0.1.7 dropped the list's `current` selection; the main view owns
     // selection through its reference source, so a session is "the one being
@@ -159,14 +161,31 @@ export function apply(ctx: ClientContext): void {
       // that ends between the running edge and this read makes the binding
       // calls throw in 0.1.7, so a failed read degrades to "no detail".
       try {
-        const chatTarget = (ctx.uiConversation.binding(binding) as {
+        const conversation = ctx.uiConversation.binding(binding) as unknown as {
+          activate(target: string): void
           target(key: string): { getSnapshot(): unknown }
-        }).target('chat')
-        const chat = chatTarget.getSnapshot() as ChatSnapshotLike | undefined
+        }
+        // Reading a target source does not activate it in 0.1.7+; without
+        // activation the chat nodes this classification needs stay absent for
+        // every session the shell has not selected.
+        conversation.activate('chat')
+        const chat = conversation.target('chat').getSnapshot() as ChatSnapshotLike | undefined
         const session = binding.session.getSnapshot() as unknown as SessionSnapshot
         return sessionDetailOf(session, chat)
       } catch {
         return undefined
+      }
+    },
+    // Open a session the UI never opened so its chat view can assemble the
+    // final assistant text; skipped when no alert could use it.
+    ensureDetail: async (id) => {
+      const settings = currentSettings()
+      if (!settings.browserEnabled && !settings.soundEnabled) return
+      if (!Object.values(settings.types).some(type => type.enabled)) return
+      try {
+        await ctx.sessions.using(id, { source: 'sessionNotification' }, async () => {})
+      } catch (error) {
+        console.warn('[dsh-session-notification] could not load the notification session', id, error)
       }
     },
     titleOf: (id: SessionId) => ctx.sessions.list.getSnapshot().byId[id]?.displayTitle ?? id,

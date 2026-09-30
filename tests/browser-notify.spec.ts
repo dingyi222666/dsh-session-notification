@@ -69,6 +69,18 @@ describe('page icon in browser notifications', () => {
     focus.mockRestore()
   })
 
+  it('closes the card even when the click action throws', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { instances } = stubNotification()
+    const activated = vi.fn(() => { throw new Error('navigation failed') })
+    showBrowserNotification('t', 'b', 'tag', activated)
+    const notification = instances[0]
+    notification.onclick?.()
+    expect(activated).toHaveBeenCalledTimes(1)
+    expect(notification.close).toHaveBeenCalledTimes(1)
+    warn.mockRestore()
+  })
+
   it('marks desktop notifications silent so the OS sound does not double ours', () => {
     vi.stubGlobal('dshDesktop', { protocolVersion: 1 })
     const { created } = stubNotification()

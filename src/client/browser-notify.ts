@@ -19,6 +19,13 @@ interface RenotifyOptions extends NotificationOptions {
 /** Tag prefix shared by every alert from this plugin. */
 export const NOTIFICATION_TAG_PREFIX = 'dsh-session-notification'
 
+/**
+ * Live notifications kept referenced until they close: a click handler is a
+ * property of the JS wrapper, so letting it be collected can swallow the
+ * activation (the platform side only knows the notification id).
+ */
+const liveNotifications = new Set<Notification>()
+
 /** The current notification permission state. */
 export function browserPermission(): BrowserPermission {
   if (typeof Notification === 'undefined') return 'unsupported'
@@ -112,9 +119,20 @@ export function showBrowserNotification(
   }
   /** Focus the page, run the caller's navigation, then dismiss the card. */
   const activate = (notification: Notification): void => {
+    liveNotifications.add(notification)
+    const forget = (): void => { liveNotifications.delete(notification) }
+    if (typeof notification.addEventListener === 'function') {
+      notification.addEventListener('close', forget, { once: true })
+    }
     notification.onclick = () => {
+      forget()
       window.focus()
-      onActivate?.()
+      try {
+        onActivate?.()
+      } catch (error) {
+        // A failed navigation must not leave the card stuck on screen.
+        console.warn('[dsh-session-notification] notification click action failed', error)
+      }
       notification.close()
     }
   }

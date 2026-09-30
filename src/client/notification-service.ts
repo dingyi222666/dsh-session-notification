@@ -81,6 +81,12 @@ export interface NotificationEvent {
 export interface NotificationEnginePorts {
   /** Read one session's detail snapshot; undefined when unavailable. */
   detailOf: (sessionId: SessionId) => SessionDetail | undefined
+  /**
+   * Materialize the detail inputs before the settle read (open a session the
+   * UI never opened so its chat view can assemble the final assistant text).
+   * Optional and best-effort: a failure must not lose the classification.
+   */
+  ensureDetail?: (sessionId: SessionId) => Promise<void>
   /** Human display title of one session. */
   titleOf: (sessionId: SessionId) => string
   /** Wait for trailing wire frames after a running edge (settle window). */
@@ -260,6 +266,13 @@ export class NotificationEngine {
       if (this.silenced(id)) {
         this.prevRunning.delete(id)
         return
+      }
+      // A session the user never opened has no loaded history, so its chat
+      // view holds no nodes yet; materialize it best-effort before reading.
+      try {
+        await this.ports.ensureDetail?.(id)
+      } catch {
+        // Best effort only: classify from whatever snapshot reads exist.
       }
       const detail = this.ports.detailOf(id)
       const failed = detail !== undefined && (

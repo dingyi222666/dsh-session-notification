@@ -163,6 +163,34 @@ describe('NotificationEngine', () => {
     expect(ports.events).toEqual([{ kind: 'question', sessionId: 'a', title: 'a', detail: '' }])
   })
 
+  it('materializes the detail before the settle read', async () => {
+    const order: string[] = []
+    const ports = makePorts({
+      ensureDetail: async () => { order.push('ensure') },
+      detailOf: () => { order.push('detail'); return detail({ finalText: 'done' }) },
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    // Arming reads the run baseline; only the settle read is under test here.
+    order.length = 0
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(order).toEqual(['ensure', 'detail'])
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: 'done' }])
+  })
+
+  it('still classifies when materializing the detail fails', async () => {
+    const ports = makePorts({
+      ensureDetail: async () => { throw new Error('history unavailable') },
+      detailOf: () => detail({ finalText: 'fallback' }),
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: 'fallback' }])
+  })
+
   it('skips a stale settle when a newer run armed while settling', async () => {
     let release: (() => void) | undefined
     const ports = makePorts({
