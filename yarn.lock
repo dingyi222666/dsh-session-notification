@@ -293,6 +293,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@deepseek-ai/dsh-client-ui-workspace@npm:^0.2.0-rc.2":
+  version: 0.2.0-rc.2
+  resolution: "@deepseek-ai/dsh-client-ui-workspace@npm:0.2.0-rc.2"
+  peerDependencies:
+    "@deepseek-ai/cordis": ~4.0.4
+  checksum: 10c0/4b7e9cf0d601d330f92e1d4489d7d38e5d3aaa8c6c1045adf7e76899fb267daf15b0a73b428bd0015eea7a72e35abad76ec3d9cfe56f251a145f39d6eb0414ac
+  languageName: node
+  linkType: hard
+
 "@deepseek-ai/dsh-config-editor@npm:0.2.0-rc.2":
   version: 0.2.0-rc.2
   resolution: "@deepseek-ai/dsh-config-editor@npm:0.2.0-rc.2"
@@ -398,6 +407,7 @@ __metadata:
     "@deepseek-ai/dsh-client-ui-session": "npm:^0.2.0-rc.2"
     "@deepseek-ai/dsh-client-ui-settings": "npm:^0.2.0-rc.2"
     "@deepseek-ai/dsh-client-ui-slots": "npm:^0.2.0-rc.2"
+    "@deepseek-ai/dsh-client-ui-workspace": "npm:^0.2.0-rc.2"
     "@deepseek-ai/dsh-invariants": "npm:^0.2.0-rc.2"
     "@deepseek-ai/dsh-settings": "npm:^0.2.0-rc.2"
     "@deepseek-ai/schemastery": "npm:^3.18.4"

@@ -1,6 +1,6 @@
 {
   "name": "@dingyi222666/dsh-session-notification",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Session-state notification plugin for the dsh web GUI: session completed/failed, question-asked, and permission-requested alerts with configurable built-in or custom sounds and browser notifications, plus a Notifications settings section",
   "author": "dingyi222666",
   "repository": {
@@ -41,6 +41,7 @@
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-ui-settings",
         "@deepseek-ai/dsh-api-session-controller",
+        "@deepseek-ai/dsh-client-ui-workspace",
         "@deepseek-ai/dsh-client-ui-conversation",
         "@deepseek-ai/dsh-client-ui-session"
       ],
@@ -69,6 +70,7 @@
     "@deepseek-ai/dsh-client-ui-session": "^0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "^0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-slots": "^0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-workspace": "^0.2.0-rc.2",
     "@deepseek-ai/dsh-invariants": "^0.2.0-rc.2",
     "@deepseek-ai/dsh-settings": "^0.2.0-rc.2",
     "@deepseek-ai/schemastery": "^3.18.4",

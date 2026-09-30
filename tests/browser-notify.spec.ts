@@ -7,25 +7,33 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { browserPermission, showBrowserNotification } from '../src/client/browser-notify.ts'
 
+interface FakeNotificationInstance {
+  onclick: (() => void) | null
+  close: ReturnType<typeof vi.fn>
+}
+
 interface FakeNotification {
   staticPermission: NotificationPermission
   created: Array<{ title: string; options: NotificationOptions }>
+  instances: FakeNotificationInstance[]
 }
 
 function stubNotification(): FakeNotification {
   const created: Array<{ title: string; options: NotificationOptions }> = []
+  const instances: FakeNotificationClass[] = []
   let staticPermission: NotificationPermission = 'granted'
   class FakeNotificationClass {
     static get permission(): NotificationPermission { return staticPermission }
     static set permission(value: NotificationPermission) { staticPermission = value }
     onclick: (() => void) | null = null
+    close = vi.fn()
     constructor(title: string, options: NotificationOptions) {
       created.push({ title, options })
+      instances.push(this)
     }
-    close(): void {}
   }
   vi.stubGlobal('Notification', FakeNotificationClass)
-  return { get staticPermission() { return staticPermission }, set staticPermission(v) { staticPermission = v }, created }
+  return { get staticPermission() { return staticPermission }, set staticPermission(v) { staticPermission = v }, created, instances }
 }
 
 function addIconLink(rel: string, href: string): void {
@@ -46,6 +54,19 @@ describe('page icon in browser notifications', () => {
     const { created } = stubNotification()
     expect(showBrowserNotification('t', 'b')).toBe(true)
     expect(created[0].options.icon).toMatch(/\/favicon\.svg$/)
+  })
+
+  it('focuses the page, runs the click action, then closes the card', () => {
+    const focus = vi.spyOn(window, 'focus').mockImplementation(() => {})
+    const activated = vi.fn()
+    const { instances } = stubNotification()
+    expect(showBrowserNotification('t', 'b', 'tag', activated)).toBe(true)
+    const notification = instances[0]
+    notification.onclick?.()
+    expect(focus).toHaveBeenCalledTimes(1)
+    expect(activated).toHaveBeenCalledTimes(1)
+    expect(notification.close).toHaveBeenCalledTimes(1)
+    focus.mockRestore()
   })
 
   it('marks desktop notifications silent so the OS sound does not double ours', () => {

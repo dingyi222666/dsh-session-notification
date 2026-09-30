@@ -39,6 +39,9 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {
   SessionStatusSnapshot,
 } from '@deepseek-ai/dsh-client-ui-session/client'
+// Type-only: the workspace navigation merge (ctx.uiWorkspace). Injected
+// optionally so a composition without it keeps the plugin running.
+import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
 import type { NotificationMode, NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 import { DEFAULT_NOTIFICATION_SETTINGS } from '../settings.ts'
 import { createLocalSettingsScope } from './local-settings.ts'
@@ -106,6 +109,16 @@ export function apply(ctx: ClientContext): void {
   // Release the shared AudioContext (and any preview still holding it) when
   // the plugin unloads; a live context keeps a system audio stream open.
   ctx.effect(() => () => player.dispose(), 'dsh-session-notification: sound player')
+
+  // Optional navigation capability: clicking a notification returns to the
+  // session that raised it. The service is injected optionally so a
+  // composition without the workspace UI still activates this plugin (the
+  // click then only focuses the page).
+  let openSession: ((sessionId: SessionId) => void) | undefined
+  ctx.inject(['uiWorkspace'], (workspaceCtx) => {
+    openSession = (sessionId) => { workspaceCtx.uiWorkspace.openSession(sessionId) }
+    return () => { openSession = undefined }
+  })
   // Cross-tab arbiter: one open tab wins each event, so N tabs do not ring N
   // times; a visible tab takes the event ahead of a background one.
   const coordinator = createTabCoordinator()
@@ -123,7 +136,9 @@ export function apply(ctx: ClientContext): void {
     t: translate,
     playSound: (sound, customUrl) => { playEffective(sound, customUrl) },
     customSoundOf: (kind) => readCustomSound(kind),
-    showBrowser: (title, body, tag) => showBrowserNotification(title, body, tag),
+    showBrowser: (title, body, tag, sessionId) => showBrowserNotification(title, body, tag, () => {
+      openSession?.(sessionId)
+    }),
     // dsh 0.1.7 dropped the list's `current` selection; the main view owns
     // selection through its reference source, so a session is "the one being
     // read" while the main-view reference retains it.

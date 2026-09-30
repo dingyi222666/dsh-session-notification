@@ -92,12 +92,15 @@ function pageIconUrl(): string | undefined {
  * @param title - notification title.
  * @param body - notification body.
  * @param tag - collapse key; alerts of one kind share it, kinds differ.
+ * @param onActivate - click action, run after the page is focused (the client
+ * wiring navigates to the event's session here).
  * @returns whether a notification was actually shown.
  */
 export function showBrowserNotification(
   title: string,
   body: string,
   tag: string = NOTIFICATION_TAG_PREFIX,
+  onActivate?: () => void,
 ): boolean {
   if (typeof Notification === 'undefined') {
     console.warn('[dsh-session-notification] browser Notification API is unavailable (insecure context or unsupported browser)')
@@ -106,6 +109,14 @@ export function showBrowserNotification(
   if (Notification.permission !== 'granted') {
     console.warn(`[dsh-session-notification] browser notification suppressed: permission is "${Notification.permission}"`)
     return false
+  }
+  /** Focus the page, run the caller's navigation, then dismiss the card. */
+  const activate = (notification: Notification): void => {
+    notification.onclick = () => {
+      window.focus()
+      onActivate?.()
+      notification.close()
+    }
   }
   const icon = pageIconUrl()
   const options: RenotifyOptions = {
@@ -121,10 +132,7 @@ export function showBrowserNotification(
   }
   try {
     const notification = new Notification(title, options)
-    notification.onclick = () => {
-      window.focus()
-      notification.close()
-    }
+    activate(notification)
     return true
   } catch (error) {
     // A page icon the browser cannot rasterize must not kill the alert:
@@ -133,10 +141,7 @@ export function showBrowserNotification(
       try {
         const bareOptions: RenotifyOptions = { body, tag, renotify: true }
         const notification = new Notification(title, bareOptions)
-        notification.onclick = () => {
-          window.focus()
-          notification.close()
-        }
+        activate(notification)
         console.warn('[dsh-session-notification] page icon was rejected; notification shown without it', error)
         return true
       } catch (_secondFailure) {

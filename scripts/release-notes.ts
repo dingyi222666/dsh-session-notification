@@ -190,4 +190,10 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
       '- **依赖升级至 0.2.0-rc.2**: @deepseek-ai/dsh-* 依赖升到 ^0.2.0-rc.2(peer 仍为 cordis ~4.0.4 / schemastery ~3.18.4);rc.1→rc.2 的 187 个提交集中在桌面端命令安装/管理与 desktop-host CLI,通知链路(权限默认放行、dshDesktop 桥、Electron 通知转发)与插件消费的所有 API 面均未变化,图标(Regular 家族)也全部保留,代码零改动,typecheck/123 specs/build 全绿',
     ],
   },
+  '0.2.2': {
+    features: [
+      '- **点击通知跳转到对应会话(#7)**: 通知点击时除聚焦页面外,还会经官方导航入口 `ctx.uiWorkspace.openSession(sessionId)` 打开该事件所属会话的对话——Web 与桌面端一致(桌面端关窗隐藏后,点击通知恢复窗口并直接进入那个会话);`uiWorkspace` 采用可选注入(该服务缺失时插件照常运行,点击仅聚焦),并新增两条回归测试(点击行为、分发器把会话 id 传给通知)',
+    ],
+    fixes: [],
+  },
 }
