@@ -196,6 +196,19 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
     ],
     fixes: [],
   },
+  '0.2.5': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.2.1-alpha.2**: @deepseek-ai/dsh-* 依赖升到 ^0.2.1-alpha.2(peer 仍为 cordis ~4.0.5-alpha.1 / schemastery ~3.18.5-alpha.1);alpha.1→alpha.2 的 669 个提交逐项核对后无需改代码——插件消费的结构化面全部保持:五个 Regular 图标、`turn-error.seq/message`、`ChatSnapshot.nodes`(新增的 `ChatNodeStore.bottomSource` 是增量)、`chat` target 与 `AssistantChatData.blocks`、`activate("chat")`/target 读取语义、`ConfigForm` 契约、`SessionStatus.pendingInteraction`、`SessionSnapshot.lastAgentError`、平台模块表;ui-workspace 的改动是 `forkSession` 选项/文档与内部重构(`openSession(target)` 签名未变),sessions 契约新增 `fork` 的 `allowMigration`(与本插件无关),桌面端通知链路(权限默认放行、`dshDesktop` 桥)无变化;typecheck/128 specs/build 全绿',
+    ],
+  },
+  '0.2.4': {
+    features: [],
+    fixes: [
+      '- **移除 invariant 伴生模块**: dsh 0.2.1-alpha.1 通过 "refactor: remove runtime invariant plugins" 删除了 `@deepseek-ai/dsh-invariants` 与整套运行时 invariant 插件机制(loader/app-boot 不再有 invariant 相关查找、该包也未随本版发布)——本包随之删除 `src/invariant.ts`、`./invariant` 导出与 `lib/invariant.js` 产物(现在只构建 `lib/index.js` + `lib/client.js`),并移除该 devDependency;宿主半区本就惰性、无任何 invariant 依赖',
+      '- **依赖升级至 0.2.1-alpha.1**: @deepseek-ai/dsh-* 依赖升到 ^0.2.1-alpha.1,cordis/schemastery 对齐新 peer(^4.0.5-alpha.1 / ^3.18.5-alpha.1);rc.2→0.2.1-alpha.1 的 266 个提交逐项核对:插件消费的所有结构化面均保持——五个 Regular 图标、`turn-error.seq/message`、`ChatSnapshot.nodes`、`chat` target 与 `AssistantChatData.blocks`(text block)、`activate("chat")`/target 读取语义、平台模块表(web/src/platform.ts 无改动)、settings 的 ConfigForm 契约;ui-conversation 的改动是工具节点增量字段(ToolResultNode 新增 `name`/`args`)、client-modules 的改动是 HMR 样式归属,桌面端通知链路(preload `dshDesktop` 桥、权限默认放行)也无变化',
+    ],
+  },
   '0.2.3': {
     features: [
       '- **点击通知跳转到对应会话(#7)**: 通知点击时除聚焦页面外,还会打开该事件所属会话的对话——桌面端关窗隐藏后,点击通知会恢复窗口并直接进入那个会话;v0.2.2 引入该能力,本版修复了它在实际 GUI(尤其桌面端)中未生效的问题(见下)',

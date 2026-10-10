@@ -3,10 +3,11 @@
  * browser-half counterpart of the in-repo clientBundle preset, kept
  * self-contained so this package builds outside the dsh workspace.
  *
- * Emits three artifacts:
- *  - lib/index.js + lib/invariant.js: the Node half (ESM) the host Loader
- *    mounts. Imports @deepseek-ai runtime packages (peer dependencies);
- *    everything else is type-only.
+ * Emits two artifacts:
+ *  - lib/index.js: the Node half (ESM) the host Loader mounts. Imports
+ *    @deepseek-ai runtime packages (peer dependencies); everything else is
+ *    type-only. dsh 0.2.1-alpha.1 removed the runtime invariant-plugin
+ *    mechanism, so the former ./invariant companion is gone.
  *  - lib/client.js: the browser half (CJS closure bundle) served by the
  *    modules node half into window.__DSH_BOOT__ — a lazy module-table entry
  *    whose externals are exactly the platform seed modules, answered at
@@ -49,7 +50,7 @@ const CSS_VIRTUAL_SUFFIX = '.mjs'
 export default [
   {
     name: `${PLUGIN_ID}/node`,
-    entry: ['src/index.ts', 'src/invariant.ts'],
+    entry: ['src/index.ts'],
     outDir: 'lib',
     format: ['esm'],
     platform: 'node',
