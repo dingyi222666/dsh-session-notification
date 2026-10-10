@@ -16,12 +16,24 @@ describe('resolveNotificationSettings', () => {
     const resolved = resolveNotificationSettings(undefined)
     expect(resolved.soundEnabled).toBe(true)
     expect(resolved.browserEnabled).toBe(false)
-    expect(resolved.notifyCurrent).toBe(false)
+    expect(resolved.currentNotificationMode).toBe('hidden')
   })
 
   it('defaults to main-session-only notifications after its subagents', () => {
     const resolved = resolveNotificationSettings(undefined)
     expect(resolved.notificationMode).toBe('main-wait')
+  })
+
+  it('honors an explicit current-session notification mode', () => {
+    expect(resolveNotificationSettings({ currentNotificationMode: 'always' }).currentNotificationMode).toBe('always')
+    expect(resolveNotificationSettings({ currentNotificationMode: 'unfocused' }).currentNotificationMode).toBe('unfocused')
+    expect(resolveNotificationSettings({ currentNotificationMode: 'hidden' }).currentNotificationMode).toBe('hidden')
+    expect(resolveNotificationSettings({ currentNotificationMode: 'invalid' }).currentNotificationMode).toBe('hidden')
+  })
+
+  it('migrates the legacy notifyCurrent boolean onto modes', () => {
+    expect(resolveNotificationSettings({ notifyCurrent: true }).currentNotificationMode).toBe('always')
+    expect(resolveNotificationSettings({ notifyCurrent: false }).currentNotificationMode).toBe('hidden')
   })
 
   it('honors an explicit notification mode', () => {

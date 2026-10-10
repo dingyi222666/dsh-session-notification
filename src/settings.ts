@@ -15,6 +15,17 @@ export const NOTIFICATION_TYPES = ['completed', 'failed', 'question', 'permissio
 export type NotificationType = typeof NOTIFICATION_TYPES[number]
 
 /**
+ * When the currently active (viewed) session alerts:
+ * - `hidden`: only when the tab is backgrounded or the window minimized (default);
+ * - `unfocused`: also alerts when focus switches to another application (even if still on screen);
+ * - `always`: always alerts, even while actively viewing the foreground session.
+ */
+export const CURRENT_NOTIFICATION_MODES = ['hidden', 'unfocused', 'always'] as const
+
+/** One current-session notification mode. */
+export type CurrentNotificationMode = typeof CURRENT_NOTIFICATION_MODES[number]
+
+/**
  * Which sessions alert, and whether a main session waits for its subagents:
  * - `all`: every session alerts, including subagents;
  * - `main`: only the main session alerts, as soon as it goes idle;
@@ -48,8 +59,8 @@ export interface NotificationTypeSettings {
 export interface NotificationSettings {
   /** Master switch for browser (OS-level) notifications. */
   browserEnabled: boolean
-  /** Whether events from the session you are currently reading also alert. */
-  notifyCurrent: boolean
+  /** When events from the session you are currently reading also alert. */
+  currentNotificationMode: CurrentNotificationMode
   /** Which sessions alert and whether the main session waits for subagents. */
   notificationMode: NotificationMode
   /** Master switch for sound playback. */
@@ -66,9 +77,8 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = Object.freeze
   // Browser notifications default OFF: showing them requires the user to
   // grant the browser permission first (the settings toggle does that).
   browserEnabled: false,
-  // The session you are reading stays quiet by default; the toggle opts into
-  // being alerted there too.
-  notifyCurrent: false,
+  // The session you are reading stays quiet by default unless hidden or minimized.
+  currentNotificationMode: 'hidden',
   // Main session only, after its subagents: a fan-out of parallel subagents
   // would otherwise alert once per subagent, and a pause between waves is not
   // a finished run.
@@ -110,6 +120,15 @@ export function isNotificationType(value: unknown): value is NotificationType {
 }
 
 /**
+ * Narrow one candidate to a current-session notification mode.
+ * @param value - value crossing the settings or wire boundary.
+ * @returns whether the value is a selectable current-session notification mode.
+ */
+export function isCurrentNotificationMode(value: unknown): value is CurrentNotificationMode {
+  return CURRENT_NOTIFICATION_MODES.some(mode => mode === value)
+}
+
+/**
  * Narrow one candidate to a notification mode.
  * @param value - value crossing the settings or wire boundary.
  * @returns whether the value is a selectable notification mode.
@@ -140,6 +159,12 @@ export function resolveNotificationSettings(raw: unknown): NotificationSettings 
   }
   const volume = typeof source.volume === 'number' && Number.isFinite(source.volume)
     ? Math.min(1, Math.max(0, source.volume)) : DEFAULT_NOTIFICATION_SETTINGS.volume
+  // The current-session mode supersedes the legacy boolean notifyCurrent.
+  const currentMode = (): CurrentNotificationMode => {
+    if (isCurrentNotificationMode(source.currentNotificationMode)) return source.currentNotificationMode
+    if (source.notifyCurrent === true) return 'always'
+    return DEFAULT_NOTIFICATION_SETTINGS.currentNotificationMode
+  }
   // The mode supersedes the two legacy booleans; stored documents written
   // before the merge still resolve onto the matching mode.
   const mode = (): NotificationMode => {
@@ -151,8 +176,7 @@ export function resolveNotificationSettings(raw: unknown): NotificationSettings 
   return {
     browserEnabled: typeof source.browserEnabled === 'boolean'
       ? source.browserEnabled : DEFAULT_NOTIFICATION_SETTINGS.browserEnabled,
-    notifyCurrent: typeof source.notifyCurrent === 'boolean'
-      ? source.notifyCurrent : DEFAULT_NOTIFICATION_SETTINGS.notifyCurrent,
+    currentNotificationMode: currentMode(),
     notificationMode: mode(),
     soundEnabled: typeof source.soundEnabled === 'boolean'
       ? source.soundEnabled : DEFAULT_NOTIFICATION_SETTINGS.soundEnabled,

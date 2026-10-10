@@ -36,6 +36,7 @@ function makeDeps(overrides: Partial<NotificationDispatcherDeps> = {}): {
       showBrowser: (title, body, tag, sessionId) => { browser.push({ title, body, tag, sessionId }); return true },
       isCurrent: () => false,
       isHidden: () => false,
+      hasFocus: () => true,
       ...overrides,
     },
     sounds,
@@ -92,9 +93,9 @@ describe('NotificationDispatcher', () => {
     expect(browser).toEqual([])
   })
 
-  it('alerts for the current session when the notifyCurrent toggle is on', () => {
+  it('alerts for the current session when the currentNotificationMode is always', () => {
     const { deps, sounds, browser, settings } = makeDeps({ isCurrent: (id) => id === 'a' })
-    settings.notifyCurrent = true
+    settings.currentNotificationMode = 'always'
     new NotificationDispatcher(deps).dispatch(event('completed', 'a'))
     expect(sounds).toEqual([{ sound: 'chime' }])
     expect(browser).toHaveLength(1)
@@ -111,6 +112,29 @@ describe('NotificationDispatcher', () => {
     const { deps, browser } = makeDeps({ isCurrent: (id) => id === 'b' })
     new NotificationDispatcher(deps).dispatch(event('completed', 'a'))
     expect(browser).toHaveLength(1)
+  })
+
+  it('stays quiet when another app is in front under the hidden mode', () => {
+    const { deps, sounds, browser } = makeDeps({ isCurrent: (id) => id === 'a', hasFocus: () => false })
+    new NotificationDispatcher(deps).dispatch(event('completed', 'a'))
+    expect(sounds).toEqual([])
+    expect(browser).toEqual([])
+  })
+
+  it('alerts for the current session when another app is in front under unfocused mode', () => {
+    const { deps, sounds, browser, settings } = makeDeps({ isCurrent: (id) => id === 'a', hasFocus: () => false })
+    settings.currentNotificationMode = 'unfocused'
+    new NotificationDispatcher(deps).dispatch(event('completed', 'a'))
+    expect(sounds).toEqual([{ sound: 'chime' }])
+    expect(browser).toHaveLength(1)
+  })
+
+  it('stays quiet for a focused current session even under unfocused mode', () => {
+    const { deps, sounds, browser, settings } = makeDeps({ isCurrent: (id) => id === 'a', hasFocus: () => true })
+    settings.currentNotificationMode = 'unfocused'
+    new NotificationDispatcher(deps).dispatch(event('completed', 'a'))
+    expect(sounds).toEqual([])
+    expect(browser).toEqual([])
   })
 
   it('shows a browser notification when hidden even for the current session', () => {

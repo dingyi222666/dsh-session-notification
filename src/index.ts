@@ -11,8 +11,8 @@
  */
 import type { Context } from '@deepseek-ai/cordis'
 
-export { NOTIFICATIONS_NS } from './settings.ts'
-export type { NotificationSettings, NotificationTypeSettings, NotificationType, SoundId } from './settings.ts'
+export { NOTIFICATIONS_NS, CURRENT_NOTIFICATION_MODES } from './settings.ts'
+export type { CurrentNotificationMode, NotificationSettings, NotificationTypeSettings, NotificationType, SoundId } from './settings.ts'
 export { DEFAULT_NOTIFICATION_SETTINGS, NOTIFICATION_TYPES, SOUND_IDS, resolveNotificationSettings } from './settings.ts'
 export { NotificationSettingsSchema } from './schema.ts'
 

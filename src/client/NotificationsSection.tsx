@@ -18,9 +18,9 @@ import {
   IconQuestionOutlineRegular, IconWarningOutlineRegular, Menu,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { NotificationsKey } from './locales.ts'
-import { NOTIFICATION_MODES, SOUND_IDS } from '../settings.ts'
+import { CURRENT_NOTIFICATION_MODES, NOTIFICATION_MODES, SOUND_IDS } from '../settings.ts'
 import type {
-  NotificationMode, NotificationType, NotificationTypeSettings, SoundId,
+  CurrentNotificationMode, NotificationMode, NotificationType, NotificationTypeSettings, SoundId,
 } from '../settings.ts'
 import type { createNotificationsStore } from './settings-store.ts'
 import css from './NotificationsSection.module.css'
@@ -30,8 +30,8 @@ import css from './NotificationsSection.module.css'
 export interface NotificationsSectionInjected {
   /** Persist the browser-notification master switch (grants permission first). */
   setBrowserEnabled: (enabled: boolean) => Promise<void>
-  /** Persist whether the current session also alerts. */
-  setNotifyCurrent: (enabled: boolean) => void
+  /** Persist when the current session alerts. */
+  setCurrentNotificationMode: (mode: CurrentNotificationMode) => void
   /** Persist the notification scope (which sessions alert, subagent wait). */
   setNotificationMode: (mode: NotificationMode) => void
   /** Persist the sound master switch. */
@@ -186,7 +186,7 @@ function VolumeSlider({ value, label, onChange }: {
  * @param props - composed slot props.
  */
 export function NotificationsSection({
-  t, useStore, setBrowserEnabled, setNotifyCurrent, setNotificationMode, setSoundEnabled, setVolume, setType, testSound,
+  t, useStore, setBrowserEnabled, setCurrentNotificationMode, setNotificationMode, setSoundEnabled, setVolume, setType, testSound,
   requestPermission, testBrowserNotification, uploadCustomSound,
 }: NotificationsSectionProps) {
   const { settings, permission, customSounds } = useStore(state => state)
@@ -234,7 +234,7 @@ export function NotificationsSection({
             <div className={css.desc}>{t('current.desc')}</div>
           </div>
           <div className={css.rowActions}>
-            <Switch on={settings.notifyCurrent} label={t('current.title')} onChange={setNotifyCurrent} />
+            <CurrentModeMenu value={settings.currentNotificationMode} t={t} onSelect={setCurrentNotificationMode} />
           </div>
         </li>
 
@@ -357,6 +357,49 @@ function TypeRow({ kind, Icon, iconSize, title, desc, type, customUrl, t, onType
         }}
       />
     </li>
+  )
+}
+
+/** Current-session alert-scope label per mode. */
+const CURRENT_MODE_KEY: Record<CurrentNotificationMode, NotificationsKey> = {
+  hidden: 'current.mode.hidden',
+  unfocused: 'current.mode.unfocused',
+  always: 'current.mode.always',
+}
+
+/** The current-session alert-mode picker (the official Menu). */
+function CurrentModeMenu({ value, onSelect, t }: {
+  value: CurrentNotificationMode
+  onSelect: (mode: CurrentNotificationMode) => void
+  t: (key: NotificationsKey) => string
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Menu
+      open={open}
+      onClose={() => { setOpen(false) }}
+      items={CURRENT_NOTIFICATION_MODES.map(mode => ({ id: mode, label: t(CURRENT_MODE_KEY[mode]) }))}
+      selectedId={value}
+      onSelect={(id) => {
+        setOpen(false)
+        onSelect(id as CurrentNotificationMode)
+      }}
+      align="end"
+      portal
+      anchor={(
+        <button
+          type="button"
+          className={css.selector}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label={t('current.title')}
+          onClick={() => { setOpen(value => !value) }}
+        >
+          {t(CURRENT_MODE_KEY[value])}
+          <IconChevronDownOutlineRegular className={css.chevron} />
+        </button>
+      )}
+    />
   )
 }
 

@@ -11,7 +11,7 @@ import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-sto
 import type { ConfigFormSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
-  type NotificationMode, type NotificationSettings, type NotificationType, type NotificationTypeSettings,
+  type CurrentNotificationMode, type NotificationMode, type NotificationSettings, type NotificationType, type NotificationTypeSettings,
 } from '../settings.ts'
 import { browserPermission, type BrowserPermission } from './browser-notify.ts'
 import { readCustomSounds, withCustomSound, type CustomSounds } from './custom-audio.ts'
@@ -36,7 +36,7 @@ export interface NotificationsState {
 type NotificationsActions = {
   adopt: (draft: NotificationsState, snapshot: ConfigFormSnapshot<NotificationSettings>) => void
   setBrowserEnabled: (draft: NotificationsState, enabled: boolean) => void
-  setNotifyCurrent: (draft: NotificationsState, enabled: boolean) => void
+  setCurrentNotificationMode: (draft: NotificationsState, mode: CurrentNotificationMode) => void
   setNotificationMode: (draft: NotificationsState, mode: NotificationMode) => void
   setSoundEnabled: (draft: NotificationsState, enabled: boolean) => void
   setVolume: (draft: NotificationsState, volume: number) => void
@@ -71,8 +71,8 @@ export function createNotificationsStore(): EngineStoreHandle<NotificationsState
       setBrowserEnabled: (draft, enabled) => {
         draft.settings = { ...draft.settings, browserEnabled: enabled }
       },
-      setNotifyCurrent: (draft, enabled) => {
-        draft.settings = { ...draft.settings, notifyCurrent: enabled }
+      setCurrentNotificationMode: (draft, mode) => {
+        draft.settings = { ...draft.settings, currentNotificationMode: mode }
       },
       setNotificationMode: (draft, mode) => {
         draft.settings = { ...draft.settings, notificationMode: mode }

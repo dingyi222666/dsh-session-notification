@@ -42,7 +42,7 @@ import type {
 // Type-only: the workspace navigation merge (ctx.uiWorkspace). Injected
 // optionally so a composition without it keeps the plugin running.
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
-import type { NotificationMode, NotificationSettings, NotificationType, SoundId } from '../settings.ts'
+import type { CurrentNotificationMode, NotificationMode, NotificationSettings, NotificationType, SoundId } from '../settings.ts'
 import { DEFAULT_NOTIFICATION_SETTINGS } from '../settings.ts'
 import { createLocalSettingsScope } from './local-settings.ts'
 import { createTabCoordinator } from './tab-coordinator.ts'
@@ -146,6 +146,9 @@ export function apply(ctx: ClientContext): void {
     // read" while the main-view reference retains it.
     isCurrent: (id) => (ctx.sessions.retainInfo(id).getSnapshot().retainedBy.mainView ?? 0) > 0,
     isHidden: () => (typeof document === 'undefined' ? false : document.visibilityState === 'hidden'),
+    // `visibilityState` stays visible when another app is in front and this
+    // window is still on screen. Focus is the signal for that case.
+    hasFocus: () => (typeof document === 'undefined' ? true : document.hasFocus()),
   })
 
   const engine = new NotificationEngine({
@@ -260,9 +263,9 @@ export function apply(ctx: ClientContext): void {
   }), 'dsh-session-notification: pending watch')
 
   /** Persist one top-level preference through the scope, mirroring optimistically. */
-  const persist = (field: 'browserEnabled' | 'notifyCurrent' | 'notificationMode' | 'soundEnabled' | 'volume', value: unknown): void => {
+  const persist = (field: 'browserEnabled' | 'currentNotificationMode' | 'notificationMode' | 'soundEnabled' | 'volume', value: unknown): void => {
     if (field === 'browserEnabled') bound?.setBrowserEnabled(value as boolean)
-    else if (field === 'notifyCurrent') bound?.setNotifyCurrent(value as boolean)
+    else if (field === 'currentNotificationMode') bound?.setCurrentNotificationMode(value as CurrentNotificationMode)
     else if (field === 'notificationMode') bound?.setNotificationMode(value as NotificationMode)
     else if (field === 'soundEnabled') bound?.setSoundEnabled(value as boolean)
     else bound?.setVolume(value as number)
@@ -292,7 +295,7 @@ export function apply(ctx: ClientContext): void {
         }
         persist('browserEnabled', enabled)
       },
-      setNotifyCurrent: (enabled) => { persist('notifyCurrent', enabled) },
+      setCurrentNotificationMode: (mode) => { persist('currentNotificationMode', mode) },
       setNotificationMode: (mode) => { persist('notificationMode', mode) },
       setSoundEnabled: (enabled) => { persist('soundEnabled', enabled) },
       setVolume: (volume) => { persist('volume', Math.min(1, Math.max(0, volume))) },

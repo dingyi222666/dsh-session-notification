@@ -384,19 +384,21 @@ export interface NotificationDispatcherDeps {
   showBrowser: (title: string, body: string, tag: string, sessionId: SessionId) => boolean
   /** Whether one session is the one currently shown in the main view. */
   isCurrent: (sessionId: SessionId) => boolean
-  /** Whether the document is hidden (backgrounded). */
+  /** Whether the document is hidden (background tab, minimized, or occluded). */
   isHidden: () => boolean
+  /** Whether the document has focus. False when another application is in front. */
+  hasFocus: () => boolean
 }
 
 /**
  * Applies the durable preferences to one classified event. The session you
- * are reading stays quiet by default: while it is current and the tab is
- * visible, nothing fires unless the `notifyCurrent` toggle opts it in.
- * Otherwise the kind's effective sound (the uploaded custom audio when the
- * picker selects 自定义, else the selected built-in) plays when sound is
- * enabled, and a system notification shows when browser notifications are
- * enabled and the user is not looking at that session (backgrounded, or
- * focused elsewhere).
+ * are reading stays quiet by default: while it is current, the tab is
+ * visible, and this window is focused, nothing fires unless
+ * `currentNotificationMode` opts it in ('unfocused' when focus is lost,
+ * or 'always' regardless of focus/visibility). Otherwise the kind's effective
+ * sound plays when sound is enabled, and a system notification shows when
+ * browser notifications are enabled and the user is away from that session
+ * (reading a different session, or backgrounded/switched away).
  */
 export class NotificationDispatcher {
   /** @param deps - injected readers and sinks. */
@@ -412,9 +414,16 @@ export class NotificationDispatcher {
     if (!type.enabled) return
     const isCurrent = this.deps.isCurrent(event.sessionId)
     const hidden = this.deps.isHidden()
-    // Not interrupting what you are reading: the current, visible session
-    // alerts only when the user opted in.
-    if (isCurrent && !hidden && !settings.notifyCurrent) return
+    const unfocused = !this.deps.hasFocus()
+    const currentMode = settings.currentNotificationMode
+
+    // Determine if the user is considered away from the currently viewed session:
+    // - 'always': alerts in all cases (never suppressed).
+    // - 'unfocused': alerts when hidden (tab/minimized) or another app has focus.
+    // - 'hidden': alerts only when the tab is backgrounded or minimized.
+    const away = hidden || (currentMode === 'unfocused' && unfocused)
+    if (isCurrent && !away && currentMode !== 'always') return
+
     const title = this.deps.t(`notify.${event.kind}.title`)
     const template = this.deps.t(`notify.${event.kind}.body`)
     const detail = truncateDetail(event.detail)
@@ -436,7 +445,6 @@ export class NotificationDispatcher {
       }
     }
     if (!settings.browserEnabled) return
-    const elsewhere = hidden || !isCurrent || settings.notifyCurrent
-    if (elsewhere) this.deps.showBrowser(title, body, `${NOTIFICATION_TAG_PREFIX}:${event.kind}`, event.sessionId)
+    this.deps.showBrowser(title, body, `${NOTIFICATION_TAG_PREFIX}:${event.kind}`, event.sessionId)
   }
 }
