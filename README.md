@@ -46,14 +46,13 @@ Beyond the four built-in sounds, each kind accepts **your own audio file** (mp3/
 
 Browser (system-level) notifications are **off by default**; turning the switch on asks for the browser's permission first (a user gesture). Once granted, a notification is shown when the event's session is not the one you are reading, or when the tab is in the background. Notifications carry the **page's own icon** (the favicon the harness serves). A completed session's notification carries its **final reply text** (the last assistant message). **Clicking a notification** focuses the page and opens that session (Web and desktop alike). The Test notification button in the section sends one immediately to verify the channel once permission is granted.
 
-The session you are reading stays **quiet by default** — its own events don't interrupt you while watching. The **Current session alerts** dropdown lets you configure the distraction level:
+The session you are reading stays **quiet by default** — its own events don't interrupt you while you are actually watching it. The **Current session alerts** picker widens that:
 
-| Scenario | Hidden / Minimized (Default) | When switched away (Recommended) | Always |
+| The session you are reading, while you are… | Hidden or minimized (default) | When switched away | Always |
 | :--- | :---: | :---: | :---: |
-| **Other (background) session** completed / failed / question | ✅ Alert | ✅ Alert | ✅ Alert |
-| **Current session**, actively focused in foreground | 🔕 Quiet | 🔕 Quiet | ✅ Alert |
-| **Current session**, tab backgrounded or window minimized | ✅ Alert | ✅ Alert | ✅ Alert |
-| **Current session**, switched to another app (DSH still visible) | 🔕 Quiet | ✅ **Alert** | ✅ Alert |
+| watching it with DSH focused | 🔕 Quiet | 🔕 Quiet | ✅ Alert |
+| switched to another app, DSH still on screen | 🔕 Quiet | ✅ **Alert** | ✅ Alert |
+| in another tab, or the window is minimized | ✅ Alert | ✅ Alert | ✅ Alert |
 
 **Notify for** picks the scope (default **Main, after subagents**): *All sessions* alerts for every session including subagents; *Main only* alerts for the main session as soon as it goes idle; *Main, after subagents* holds that alert until every subagent the main session spawned has finished, so a run that only paused between subagent waves never interrupts you early (failures always alert immediately).
 

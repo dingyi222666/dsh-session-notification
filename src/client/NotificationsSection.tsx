@@ -234,7 +234,8 @@ export function NotificationsSection({
             <div className={css.desc}>{t('current.desc')}</div>
           </div>
           <div className={css.rowActions}>
-            <CurrentModeMenu value={settings.currentNotificationMode} t={t} onSelect={setCurrentNotificationMode} />
+            <SelectMenu t={t} label={t('current.title')} value={settings.currentNotificationMode}
+              options={CURRENT_NOTIFICATION_MODES} labels={CURRENT_MODE_KEY} onSelect={setCurrentNotificationMode} />
           </div>
         </li>
 
@@ -244,7 +245,8 @@ export function NotificationsSection({
             <div className={css.desc}>{t('mode.desc')}</div>
           </div>
           <div className={css.rowActions}>
-            <ModeMenu value={settings.notificationMode} t={t} onSelect={setNotificationMode} />
+            <SelectMenu t={t} label={t('mode.title')} value={settings.notificationMode}
+              options={NOTIFICATION_MODES} labels={MODE_KEY} onSelect={setNotificationMode} />
           </div>
         </li>
 
@@ -367,42 +369,6 @@ const CURRENT_MODE_KEY: Record<CurrentNotificationMode, NotificationsKey> = {
   always: 'current.mode.always',
 }
 
-/** The current-session alert-mode picker (the official Menu). */
-function CurrentModeMenu({ value, onSelect, t }: {
-  value: CurrentNotificationMode
-  onSelect: (mode: CurrentNotificationMode) => void
-  t: (key: NotificationsKey) => string
-}) {
-  const [open, setOpen] = useState(false)
-  return (
-    <Menu
-      open={open}
-      onClose={() => { setOpen(false) }}
-      items={CURRENT_NOTIFICATION_MODES.map(mode => ({ id: mode, label: t(CURRENT_MODE_KEY[mode]) }))}
-      selectedId={value}
-      onSelect={(id) => {
-        setOpen(false)
-        onSelect(id as CurrentNotificationMode)
-      }}
-      align="end"
-      portal
-      anchor={(
-        <button
-          type="button"
-          className={css.selector}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          aria-label={t('current.title')}
-          onClick={() => { setOpen(value => !value) }}
-        >
-          {t(CURRENT_MODE_KEY[value])}
-          <IconChevronDownOutlineRegular className={css.chevron} />
-        </button>
-      )}
-    />
-  )
-}
-
 /** Notification-scope label per mode. */
 const MODE_KEY: Record<NotificationMode, NotificationsKey> = {
   all: 'mode.all',
@@ -410,22 +376,25 @@ const MODE_KEY: Record<NotificationMode, NotificationsKey> = {
   'main-wait': 'mode.wait',
 }
 
-/** The notification-scope picker (the official Menu). */
-function ModeMenu({ value, onSelect, t }: {
-  value: NotificationMode
-  onSelect: (mode: NotificationMode) => void
+/** One keyed dropdown selector over the official Menu (both scope pickers). */
+function SelectMenu<Mode extends string>({ t, label, value, options, labels, onSelect }: {
   t: (key: NotificationsKey) => string
+  label: string
+  value: Mode
+  options: readonly Mode[]
+  labels: Record<Mode, NotificationsKey>
+  onSelect: (mode: Mode) => void
 }) {
   const [open, setOpen] = useState(false)
   return (
     <Menu
       open={open}
       onClose={() => { setOpen(false) }}
-      items={NOTIFICATION_MODES.map(mode => ({ id: mode, label: t(MODE_KEY[mode]) }))}
+      items={options.map(option => ({ id: option, label: t(labels[option]) }))}
       selectedId={value}
       onSelect={(id) => {
         setOpen(false)
-        onSelect(id as NotificationMode)
+        onSelect(id as Mode)
       }}
       align="end"
       portal
@@ -435,10 +404,10 @@ function ModeMenu({ value, onSelect, t }: {
           className={css.selector}
           aria-haspopup="menu"
           aria-expanded={open}
-          aria-label={t('mode.title')}
-          onClick={() => { setOpen(value => !value) }}
+          aria-label={label}
+          onClick={() => { setOpen(current => !current) }}
         >
-          {t(MODE_KEY[value])}
+          {t(labels[value])}
           <IconChevronDownOutlineRegular className={css.chevron} />
         </button>
       )}

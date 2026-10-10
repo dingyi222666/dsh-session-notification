@@ -3,7 +3,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import {
-  DEFAULT_NOTIFICATION_SETTINGS, DEFAULT_SOUND, resolveNotificationSettings,
+  CURRENT_NOTIFICATION_MODES, DEFAULT_NOTIFICATION_SETTINGS, DEFAULT_SOUND, resolveNotificationSettings,
+  type CurrentNotificationMode,
 } from '../src/settings.ts'
 
 describe('resolveNotificationSettings', () => {
@@ -24,16 +25,12 @@ describe('resolveNotificationSettings', () => {
     expect(resolved.notificationMode).toBe('main-wait')
   })
 
-  it('honors an explicit current-session notification mode', () => {
-    expect(resolveNotificationSettings({ currentNotificationMode: 'always' }).currentNotificationMode).toBe('always')
-    expect(resolveNotificationSettings({ currentNotificationMode: 'unfocused' }).currentNotificationMode).toBe('unfocused')
-    expect(resolveNotificationSettings({ currentNotificationMode: 'hidden' }).currentNotificationMode).toBe('hidden')
-    expect(resolveNotificationSettings({ currentNotificationMode: 'invalid' }).currentNotificationMode).toBe('hidden')
-  })
-
-  it('migrates the legacy notifyCurrent boolean onto modes', () => {
-    expect(resolveNotificationSettings({ notifyCurrent: true }).currentNotificationMode).toBe('always')
-    expect(resolveNotificationSettings({ notifyCurrent: false }).currentNotificationMode).toBe('hidden')
+  it('resolves the current-session mode, migrating the legacy notifyCurrent boolean', () => {
+    const modeOf = (raw: unknown): CurrentNotificationMode => resolveNotificationSettings(raw).currentNotificationMode
+    for (const mode of CURRENT_NOTIFICATION_MODES) expect(modeOf({ currentNotificationMode: mode })).toBe(mode)
+    expect(modeOf({ currentNotificationMode: 'invalid' })).toBe('hidden')
+    expect(modeOf({ notifyCurrent: true })).toBe('always')
+    expect(modeOf({ notifyCurrent: false })).toBe('hidden')
   })
 
   it('honors an explicit notification mode', () => {

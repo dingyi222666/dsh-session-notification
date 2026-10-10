@@ -146,9 +146,9 @@ export function apply(ctx: ClientContext): void {
     // read" while the main-view reference retains it.
     isCurrent: (id) => (ctx.sessions.retainInfo(id).getSnapshot().retainedBy.mainView ?? 0) > 0,
     isHidden: () => (typeof document === 'undefined' ? false : document.visibilityState === 'hidden'),
-    // `visibilityState` stays visible when another app is in front and this
-    // window is still on screen. Focus is the signal for that case.
-    hasFocus: () => (typeof document === 'undefined' ? true : document.hasFocus()),
+    // `visibilityState` stays visible while another app is in front and this
+    // window is still on screen; focus is the signal for that case.
+    hasFocus: () => typeof document === 'undefined' || document.hasFocus(),
   })
 
   const engine = new NotificationEngine({

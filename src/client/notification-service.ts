@@ -386,19 +386,20 @@ export interface NotificationDispatcherDeps {
   isCurrent: (sessionId: SessionId) => boolean
   /** Whether the document is hidden (background tab, minimized, or occluded). */
   isHidden: () => boolean
-  /** Whether the document has focus. False when another application is in front. */
-  hasFocus: () => boolean
+  /**
+   * Whether the document has focus; false while another application is in
+   * front. Optional — an absent reader counts as focused, the quiet side.
+   */
+  hasFocus?: () => boolean
 }
 
 /**
  * Applies the durable preferences to one classified event. The session you
- * are reading stays quiet by default: while it is current, the tab is
- * visible, and this window is focused, nothing fires unless
- * `currentNotificationMode` opts it in ('unfocused' when focus is lost,
- * or 'always' regardless of focus/visibility). Otherwise the kind's effective
- * sound plays when sound is enabled, and a system notification shows when
- * browser notifications are enabled and the user is away from that session
- * (reading a different session, or backgrounded/switched away).
+ * are reading stays quiet by default; `currentNotificationMode` widens that
+ * (`unfocused` also alerts once another application is in front, `always`
+ * alerts regardless). Every other session alerts whenever you are away from
+ * it: the kind's effective sound plays when sound is enabled, and a system
+ * notification shows when browser notifications are enabled.
  */
 export class NotificationDispatcher {
   /** @param deps - injected readers and sinks. */
@@ -413,16 +414,12 @@ export class NotificationDispatcher {
     const type = settings.types[event.kind]
     if (!type.enabled) return
     const isCurrent = this.deps.isCurrent(event.sessionId)
-    const hidden = this.deps.isHidden()
-    const unfocused = !this.deps.hasFocus()
-    const currentMode = settings.currentNotificationMode
-
-    // Determine if the user is considered away from the currently viewed session:
-    // - 'always': alerts in all cases (never suppressed).
-    // - 'unfocused': alerts when hidden (tab/minimized) or another app has focus.
-    // - 'hidden': alerts only when the tab is backgrounded or minimized.
-    const away = hidden || (currentMode === 'unfocused' && unfocused)
-    if (isCurrent && !away && currentMode !== 'always') return
+    const mode = settings.currentNotificationMode
+    // "Away" from the session you are reading: a backgrounded window counts
+    // for every mode, another application in front only for 'unfocused', and
+    // 'always' is never quiet. Focus is read only when the mode needs it.
+    const away = this.deps.isHidden() || (mode === 'unfocused' && this.deps.hasFocus?.() === false)
+    if (isCurrent && !away && mode !== 'always') return
 
     const title = this.deps.t(`notify.${event.kind}.title`)
     const template = this.deps.t(`notify.${event.kind}.body`)

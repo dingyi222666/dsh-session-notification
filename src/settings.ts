@@ -160,11 +160,9 @@ export function resolveNotificationSettings(raw: unknown): NotificationSettings 
   const volume = typeof source.volume === 'number' && Number.isFinite(source.volume)
     ? Math.min(1, Math.max(0, source.volume)) : DEFAULT_NOTIFICATION_SETTINGS.volume
   // The current-session mode supersedes the legacy boolean notifyCurrent.
-  const currentMode = (): CurrentNotificationMode => {
-    if (isCurrentNotificationMode(source.currentNotificationMode)) return source.currentNotificationMode
-    if (source.notifyCurrent === true) return 'always'
-    return DEFAULT_NOTIFICATION_SETTINGS.currentNotificationMode
-  }
+  const currentMode = (): CurrentNotificationMode => isCurrentNotificationMode(source.currentNotificationMode)
+    ? source.currentNotificationMode
+    : source.notifyCurrent === true ? 'always' : DEFAULT_NOTIFICATION_SETTINGS.currentNotificationMode
   // The mode supersedes the two legacy booleans; stored documents written
   // before the merge still resolve onto the matching mode.
   const mode = (): NotificationMode => {
