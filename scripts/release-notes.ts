@@ -196,6 +196,12 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
     ],
     fixes: [],
   },
+  '0.2.7': {
+    features: [],
+    fixes: [
+      '- **依赖升级至 0.2.1-rc.2**: @deepseek-ai/dsh-* 依赖升到 ^0.2.1-rc.2,cordis/schemastery 对齐转为正式版的 peer(^4.0.5 / ^3.18.5);alpha.2→rc.2 的 990 个提交逐项核对后改了 3 处——① `ConfigFormSnapshot.mode`(memory 模式概念)被移除,本地偏好作用域的快照不再带该字段;② 平台模块表新增 `zod` 与 `@tanstack/react-virtual`,tsdown 的外置模块表同步补齐(连同此前遗漏的 `dsh-client-ui-dockkit`);③ 其余插件消费面全部保持:五个 Regular 图标、`turn-error.seq/message`、`ChatSnapshot.nodes` 与 `chat` target、`activate("chat")`/target 读取语义、`SessionStatus.pendingInteraction`/`sessionStatus`、sessions 的 retain/using 契约、`uiWorkspace.openSession(target)`;桌面端差异(仅更新通道 manifest)不涉及通知权限、preload 与 `dshDesktop` 桥;typecheck/134 specs/build 全绿',
+    ],
+  },
   '0.2.6': {
     features: [
       '- **当前会话提醒时机三档(#8,贡献者 @RushMove)**: 原来的「当前会话也提醒」布尔开关升级为三档选择器——「仅后台或最小化」(默认)、「切到其他应用时」、「始终提醒」;新增基于 `document.hasFocus()` 的失焦检测,解决分屏/多屏场景下窗口仍然可见、但你已经切到别的应用时当前会话完全不提醒的问题;旧偏好自动迁移(`notifyCurrent: true` → 「始终提醒」),中英文文案与 README 防打扰对照表同步更新',

@@ -15,7 +15,7 @@
 ## 安装
 
 ```sh
-# 从 npm 安装（需要 dsh >= 0.2.1-alpha.2）
+# 从 npm 安装（需要 dsh >= 0.2.1-rc.2）
 dsh plugin --profile web add @dingyi222666/dsh-session-notification
 # 重启 dsh web 后生效
 dsh web
@@ -90,7 +90,7 @@ desktop profile（`$DSH_HOME/profiles/desktop`）由桌面应用独占，CLI 会
 - `yarn run build` —— 构建浏览器包（`lib/client.js`）与 Node 半区（`lib/index.js`）。
 - `src/client/notification-service.ts` —— 引擎（事件判定）与分发器（开关/音效/通知门控）；`src/client/settings-store.ts` —— 设置栏桥接；`src/client/NotificationsSection.tsx` —— 设置栏 UI；`src/client/sounds.ts` 与 `src/client/custom-audio.ts` —— 内置与自定义音效。
 - `yarn test` —— 行为测试；`yarn run typecheck` —— 类型门禁。
-- dsh 0.2.1-alpha.2：`@deepseek-ai/dsh-*` 类型作为 devDependencies（`^0.2.1-alpha.2`；`@deepseek-ai/cordis` ^4.0.5-alpha.1、`@deepseek-ai/schemastery` ^3.18.5-alpha.1，与 dsh 包的 peer 依赖一致）从 npm 安装，不再需要检出路径映射；0.2.1 这一线（自 alpha.1 起）移除了运行时 invariant 插件机制，因此原来的 `./invariant` 伴生模块已删除。
+- dsh 0.2.1-rc.2：`@deepseek-ai/dsh-*` 类型作为 devDependencies（`^0.2.1-rc.2`；`@deepseek-ai/cordis` ^4.0.5、`@deepseek-ai/schemastery` ^3.18.5，已转为正式版，与 dsh 包的 peer 依赖一致）从 npm 安装，不再需要检出路径映射；0.2.1 这一线（自 alpha.1 起）移除了运行时 invariant 插件机制，因此原来的 `./invariant` 伴生模块已删除。
 - Node 半区改动需要重启 `dsh web`；浏览器包改动重新 `yarn run build` 即可（`--dev` 模式会自动热更新）。
 
 ## 已知限制

@@ -11,9 +11,9 @@
  *  - lib/client.js: the browser half (CJS closure bundle) served by the
  *    modules node half into window.__DSH_BOOT__ — a lazy module-table entry
  *    whose externals are exactly the platform seed modules, answered at
- *    runtime by the shell's loader (react family, cordis, ui-slots,
- *    ui-primitives, schema-form) plus the documented
- *    runtime/client store exemption.
+ *    runtime by the shell's loader (react family, cordis, zod,
+ *    react-virtual, store, ui-slots, ui-primitives, dockkit) plus the
+ *    documented runtime/client store exemption.
  *
  * CSS Modules are compiled by lightningcss inside the bundle: importing
  * `x.module.css` yields the hashed class map, and the css text auto-injects
@@ -29,16 +29,18 @@ import { transform } from 'lightningcss'
 const PLUGIN_ID = '@dingyi222666/dsh-session-notification'
 
 /** The browser platform seed modules the shell shares into the frozen module
- *  table (0.1.2-alpha.1 table: react family, cordis, store, ui-slots,
- *  ui-primitives). `dsh-client-runtime/client` is deliberately NOT external:
- *  the alpha table no longer materializes it, and the plugin only imports its
- *  types (the store engine now lives in dsh-client-store), so the bundle
- *  carries nothing from it at runtime. */
+ *  table (0.2.1-rc.2 table: react family, cordis, zod, react-virtual, store,
+ *  ui-slots, ui-primitives, ui-dockkit). `dsh-client-runtime/client` is
+ *  deliberately NOT external: the table does not materialize it, and the
+ *  plugin only imports its types (the store engine lives in
+ *  dsh-client-store), so the bundle carries nothing from it at runtime. */
 const PLATFORM_MODULES = [
   'react', 'react/jsx-runtime', 'react-dom', 'react-dom/client', '@deepseek-ai/cordis',
+  'zod', '@tanstack/react-virtual',
   '@deepseek-ai/dsh-client-store',
   '@deepseek-ai/dsh-client-ui-slots',
   '@deepseek-ai/dsh-client-ui-primitives',
+  '@deepseek-ai/dsh-client-ui-dockkit',
 ] as const
 
 const EXTERNALS: readonly string[] = [...PLATFORM_MODULES]

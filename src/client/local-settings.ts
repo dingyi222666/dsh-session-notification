@@ -71,7 +71,6 @@ export function createLocalSettingsScope(): ConfigForm<NotificationSettings> {
     user: undefined,
     revision,
     writable: true,
-    mode: 'memory',
   })
 
   const commit = (next: NotificationSettings, persist: boolean): void => {
