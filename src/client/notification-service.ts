@@ -111,7 +111,7 @@ export interface NotificationEnginePorts {
   isRunning?: (sessionId: SessionId) => boolean
   /**
    * Whether one session still has unfinished work of its own that will start
-   * another turn without the user: a queued follow-up, an armed goal round, or
+   * another turn without the user: a queued follow-up, an active goal round, or
    * a live background job. The host running bit is false in all three, so a
    * completion notice there announces an end that has not happened. Optional:
    * absent holds nothing extra.
@@ -350,7 +350,7 @@ export class NotificationEngine {
         return
       }
       // Not finished: descendants still run, or the session will start another
-      // turn on its own (a queued follow-up, an armed goal round, a live job).
+      // turn on its own (a queued follow-up, an active goal round, a live job).
       // Hold the notice and release it once a later snapshot proves the whole
       // thing ended — a continuation supersedes it in `armRun` instead.
       if (!this.finished(id)) {

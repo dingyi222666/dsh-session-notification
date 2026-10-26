@@ -94,9 +94,17 @@ const SETTLE_BACKOFF = 2
  *  (uiSession). */
 export const inject = ['slots', 'locale', 'sessions', 'uiConversation', 'uiSession', 'uiWorkspace']
 
-/** Minimal structural view of the goal projection (avoids a host-package import). */
+/**
+ * Minimal structural view of the goal projection (avoids a host-package
+ * import). The wire view is `state.current`, i.e. `{ goal, roundsStarted,
+ * createdAt, updatedAt }`, and the goal it carries is the durable snapshot —
+ * `id`, `revision`, `objective`, `phase`, `blockedReason`, `maxGoalRounds`.
+ * Goal *activation* is process-local and deliberately absent from the
+ * projection (`dsh-goal/lib/index.js` foldGoal: "a fresh durable projection;
+ * activation is deliberately absent"), so only the phase is readable here.
+ */
 interface GoalProjectionLike {
-  goal: { phase: 'active' | 'paused' | 'blocked' | 'complete', activation?: 'armed' | 'disarmed' }
+  goal: { phase: 'active' | 'paused' | 'blocked' | 'complete' }
 }
 
 /** Minimal structural view of the client jobs service's row state. */
@@ -226,9 +234,9 @@ export function apply(ctx: ClientContext): void {
     },
     // Work that will start another turn without the user. The host running bit
     // is false for all of it, so a completion notice there announces an end
-    // that has not happened: a queued follow-up (inbox next-turn), an armed
-    // goal round the driver queues on idle, or a live background job owned by
-    // this session.
+    // that has not happened: a queued follow-up (inbox next-turn), an active
+    // goal whose next round the driver queues on idle, or a live background
+    // job owned by this session.
     hasUnfinishedWork: (id) => {
       const binding = (() => {
         try {
@@ -249,11 +257,14 @@ export function apply(ctx: ClientContext): void {
       }
       const inbox = projection('inbox') as { 'next-turn'?: readonly unknown[] } | undefined
       if ((inbox?.['next-turn']?.length ?? 0) > 0) return true
-      // Only an armed goal drives itself: dsh-goal-round-driver's `drive()`
-      // returns unless phase is 'active' AND activation is 'armed', so a
-      // disarmed goal will not start another turn on its own.
+      // An `active` goal is unfinished by definition: the round driver queues
+      // the next round when it observes `idle`, so the notice there announces
+      // an end the user has not reached. Activation is not on the wire (it is
+      // process-local), so it cannot be consulted; an active goal that a
+      // restart left disarmed is held conservatively rather than risk a false
+      // completion, and holds are re-checked on every list snapshot.
       const goal = projection('goal') as GoalProjectionLike | null | undefined
-      if (goal?.goal.phase === 'active' && goal.goal.activation === 'armed') return true
+      if (goal?.goal.phase === 'active') return true
       // Background jobs are reported through the jobs service when the shell
       // provides one; rows are keyed by owner session id.
       try {
