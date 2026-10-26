@@ -199,7 +199,9 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
   '0.2.7': {
     features: [],
     fixes: [
-      '- **依赖升级至 0.2.1-rc.2**: @deepseek-ai/dsh-* 依赖升到 ^0.2.1-rc.2,cordis/schemastery 对齐转为正式版的 peer(^4.0.5 / ^3.18.5);alpha.2→rc.2 的 990 个提交逐项核对后改了 3 处——① `ConfigFormSnapshot.mode`(memory 模式概念)被移除,本地偏好作用域的快照不再带该字段;② 平台模块表新增 `zod` 与 `@tanstack/react-virtual`,tsdown 的外置模块表同步补齐(连同此前遗漏的 `dsh-client-ui-dockkit`);③ 其余插件消费面全部保持:五个 Regular 图标、`turn-error.seq/message`、`ChatSnapshot.nodes` 与 `chat` target、`activate("chat")`/target 读取语义、`SessionStatus.pendingInteraction`/`sessionStatus`、sessions 的 retain/using 契约、`uiWorkspace.openSession(target)`;桌面端差异(仅更新通道 manifest)不涉及通知权限、preload 与 `dshDesktop` 桥;typecheck/134 specs/build 全绿',
+      '- **依赖升级至 0.2.1-rc.2**: @deepseek-ai/dsh-* 依赖升到 ^0.2.1-rc.2,cordis/schemastery 对齐转为正式版的 peer(^4.0.5 / ^3.18.5);alpha.2→rc.2 的 990 个提交逐项核对后改了 3 处——① `ConfigFormSnapshot.mode`(memory 模式概念)被移除,本地偏好作用域的快照不再带该字段;② 平台模块表新增 `zod` 与 `@tanstack/react-virtual`,tsdown 的外置模块表同步补齐(连同此前遗漏的 `dsh-client-ui-dockkit`);③ 其余插件消费面全部保持:五个 Regular 图标、`turn-error.seq/message`、`ChatSnapshot.nodes` 与 `chat` target、`activate("chat")`/target 读取语义、`SessionStatus.pendingInteraction`/`sessionStatus`、sessions 的 retain/using 契约、`uiWorkspace.openSession(target)`;桌面端差异(仅更新通道 manifest)不涉及通知权限、preload 与 `dshDesktop` 桥;typecheck/141 specs/build 全绿',
+      '- **完成通知不再在会话自续跑时误响(#9,贡献者 @j62268781-alt)**: 空闲边沿不再直接判定完成——宿主仍持有会自动开启下一轮的工作时(排队中的后续输入、`active` 且未到轮次上限的 goal)不触发「完成」,由续跑自身结束后的边沿通知;失败仍然立即通知。信号读自会话列表快照的 `inbox` / `goal` projection,用户从未打开过的会话同样覆盖;不延长 settle 窗口,也不暂存通知',
+      '- **完成/失败通知标题取本轮最后一条用户消息(#9)**: 会话标题由首条消息生成后不再变化,长会话的「已完成」会一直报第一句;现在改取本轮最后一条真人用户消息(`source.kind === "user"`,与会话标题的判定口径一致),折叠空白并截断到 60 字符,没有用户消息时回落到会话标题',
     ],
   },
   '0.2.6': {
