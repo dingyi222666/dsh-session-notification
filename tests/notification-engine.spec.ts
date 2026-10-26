@@ -7,10 +7,10 @@
 import { describe, expect, it } from 'vitest'
 import type { SessionId } from '@deepseek-ai/dsh-client-connection/client'
 // dsh 0.1.3: session-list types live in the api-session-controller client.
-import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
+import type { SessionListState, SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
 import {
-  NotificationEngine, truncateDetail,
-  type NotificationEnginePorts, type NotificationEvent, type PendingFacts, type SessionDetail,
+  NotificationEngine, sessionDetailOf, truncateDetail, truncateTitle,
+  type ChatSnapshotLike, type NotificationEnginePorts, type NotificationEvent, type PendingFacts, type SessionDetail,
 } from '../src/client/notification-service.ts'
 
 function summary(id: string, running: boolean) {
@@ -346,6 +346,113 @@ describe('NotificationEngine', () => {
     engine.observe(list({ main: summary('main', false) }))
     await flush()
     expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '' }])
+  })
+
+  it('names a run by its latest user message, not the first-prompt session title', async () => {
+    // dsh titles a session from its first prompt and never regenerates it, so
+    // the session title names a subject the user left behind many turns ago.
+    const ports = makePorts({
+      detailOf: () => detail({ finalText: '已补上 3 个用例', lastUserText: '再加个单元测试' }),
+      titleOf: () => '修复登录超时',
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events[0]?.title).toBe('再加个单元测试')
+  })
+
+  it('stays silent when the host will start another turn by itself', async () => {
+    // An active goal round or a queued follow-up resumes the session from the
+    // idle edge, so the notice there would announce an end that has not come.
+    let unfinished = true
+    const ports = makePorts({
+      detailOf: () => detail({ finalText: 'step done', lastUserText: '继续' }),
+      hasUnfinishedWork: () => unfinished,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+    // Clearing the work does not resurrect the superseded run: no late chime.
+    unfinished = false
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+    // The continuation's own idle edge is the one that alerts.
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: '继续', detail: 'step done' }])
+  })
+
+  it('never defers a failure behind incoming host work', async () => {
+    let errorSeq = 0
+    const ports = makePorts({
+      detailOf: () => detail({ maxTurnErrorSeq: errorSeq, failureMessage: 'boom' }),
+      hasUnfinishedWork: () => true,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    errorSeq = 1
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events.map(event => event.kind)).toEqual(['failed'])
+  })
+
+  it('drops a subagent-held completion when the session will continue instead', async () => {
+    let descendantsRunning = true
+    const ports = makePorts({
+      detailOf: () => detail(),
+      hasRunningDescendants: () => descendantsRunning,
+      hasUnfinishedWork: () => true,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ main: summary('main', true) }))
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+    // The descendants settle, but the host resumes the session: no notice.
+    descendantsRunning = false
+    engine.observe(list({ main: summary('main', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+  })
+})
+
+describe('sessionDetailOf', () => {
+  const chat = (...nodes: { kind: string, data: unknown }[]): ChatSnapshotLike => ({
+    nodes: { values: () => nodes[Symbol.iterator]() },
+  })
+  const session = { lastAgentError: null } as unknown as SessionSnapshot
+  const user = (seq: number, text: string, source = 'user') => ({
+    kind: 'user', data: { seq, content: [{ type: 'text', text }], source: { kind: source } },
+  })
+
+  it('reads the latest human message and ignores host-authored user turns', () => {
+    const result = sessionDetailOf(session, chat(
+      user(1, '修复登录超时'),
+      user(2, '再加个单元测试'),
+      user(3, '<goal_round round="2">', 'goal'),
+      { kind: 'steering', data: { seq: 4, content: [{ type: 'text', text: '插话' }] } },
+      { kind: 'assistant-step', data: { blocks: [{ kind: 'text', text: '已补上 3 个用例' }] } },
+    ))
+    expect(result.lastUserText).toBe('再加个单元测试')
+    expect(result.finalText).toBe('已补上 3 个用例')
+  })
+
+  it('reports no user text for a chat view without a human message', () => {
+    expect(sessionDetailOf(session, chat(user(1, 'goal', 'goal'))).lastUserText).toBe('')
+    expect(sessionDetailOf(session, undefined).lastUserText).toBe('')
+  })
+})
+
+describe('truncateTitle', () => {
+  it('collapses whitespace and caps the notification subject', () => {
+    expect(truncateTitle('a\n\n  b   c')).toBe('a b c')
+    expect(truncateTitle('x'.repeat(80)).length).toBe(60)
+    expect(truncateTitle('x'.repeat(80)).endsWith('…')).toBe(true)
   })
 })
 

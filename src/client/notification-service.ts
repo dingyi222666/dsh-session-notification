@@ -65,6 +65,8 @@ export interface SessionDetail {
   lastAgentError: string | null
   /** Text of the last assistant message (the final completion text); '' when none. */
   finalText: string
+  /** Text of the latest human user message (the run's subject), when known. */
+  lastUserText?: string
 }
 
 /** One classified notification event. */
@@ -95,6 +97,12 @@ export interface NotificationEnginePorts {
   isSubagent: (sessionId: SessionId) => boolean
   /** Whether one session still has a running descendant (recursive). */
   hasRunningDescendants: (sessionId: SessionId) => boolean
+  /**
+   * Whether the host holds work that starts another turn by itself (a queued
+   * follow-up or an owed goal round); the running bit is false there, so a
+   * completion notice would announce an end that has not happened.
+   */
+  hasUnfinishedWork?: (sessionId: SessionId) => boolean
   /** Deliver one classified event. */
   emit: (event: NotificationEvent) => void
 }
@@ -139,6 +147,11 @@ export class NotificationEngine {
   /** Emit every held completion whose descendants have all settled. */
   private releaseHeld(): void {
     for (const [id, detail] of [...this.heldCompletions]) {
+      // Work that will continue the session has no end to announce yet.
+      if (this.ports.hasUnfinishedWork?.(id) === true) {
+        this.heldCompletions.delete(id)
+        continue
+      }
       if (this.waitsFor(id)) continue
       this.heldCompletions.delete(id)
       this.ports.emit({ kind: 'completed', sessionId: id, title: this.ports.titleOf(id), detail })
@@ -285,19 +298,29 @@ export class NotificationEngine {
       if (failed) {
         // A failure is actionable now: never hold it behind subagents.
         this.heldCompletions.delete(id)
-        this.ports.emit({ kind: 'failed', sessionId: id, title: this.ports.titleOf(id), detail: message })
+        this.ports.emit({ kind: 'failed', sessionId: id, title: this.label(id, detail), detail: message })
         return
       }
+      // The host resumes the session by itself: this idle edge is a pause, and
+      // the continuation's own end classifies instead. Never hold the notice —
+      // a superseded run has nothing left to announce.
+      if (this.ports.hasUnfinishedWork?.(id) === true) return
       // Hold the completion while descendants still run: the session only
       // paused between subagent waves, so alert when the whole fan-out ends.
       if (this.waitsFor(id)) {
         this.heldCompletions.set(id, message)
         return
       }
-      this.ports.emit({ kind: 'completed', sessionId: id, title: this.ports.titleOf(id), detail: message })
+      this.ports.emit({ kind: 'completed', sessionId: id, title: this.label(id, detail), detail: message })
     } finally {
       this.settling.delete(id)
     }
+  }
+
+  /** The run's latest user message, else the first-prompt session title. */
+  private label(id: SessionId, detail: SessionDetail | undefined): string {
+    const text = truncateTitle(detail?.lastUserText ?? '')
+    return text.length > 0 ? text : this.ports.titleOf(id)
   }
 
   /** Raise the question/permission kind on a pending-interaction arrival. */
@@ -317,9 +340,11 @@ export class NotificationEngine {
  * Project one session's lifecycle + chat snapshots into the engine's
  * {@link SessionDetail}. The final completion text is the joined text of the
  * last assistant step (the chat view's `assistant-step` node) that carries
- * any; failure classification reads the chat view's turn-error nodes plus the
- * session's host agent-error. An absent chat target (session not opened)
- * yields no turn-error or final-text facts, never a throw.
+ * any; the run's subject is the latest human user message, so a notice names
+ * the request it answered instead of the first-prompt session title. Failure
+ * classification reads the chat view's turn-error nodes plus the session's
+ * host agent-error. An absent chat target (session not opened) yields no
+ * turn-error, final-text, or user-message facts, never a throw.
  * @param session - the session lifecycle snapshot (session-controller).
  * @param chat - the session's chat view snapshot, when one is materialized.
  * @returns the derived detail.
@@ -331,6 +356,7 @@ export function sessionDetailOf(
   let maxTurnErrorSeq = 0
   let failureMessage: string | null = null
   let finalText = ''
+  let lastUserText = ''
   if (chat !== undefined) {
     for (const node of chat.nodes.values()) {
       if (node.kind === 'turn-error') {
@@ -346,6 +372,15 @@ export function sessionDetailOf(
           .map(block => block.text)
           .join('')
         if (text.length > 0) finalText = text
+      } else if (node.kind === 'user') {
+        // Human messages only: goal rounds and other host prompts share the role.
+        const data = node.data as { content: readonly { type: string, text?: string }[], source?: { kind?: string } }
+        if (data.source?.kind === 'user') {
+          lastUserText = data.content
+            .filter(block => block.type === 'text' && block.text !== undefined)
+            .map(block => block.text)
+            .join('')
+        }
       }
     }
   }
@@ -354,7 +389,15 @@ export function sessionDetailOf(
     failureMessage,
     lastAgentError: session.lastAgentError,
     finalText,
+    lastUserText,
   }
+}
+
+/** Cap the notification subject (a user message can be a whole paragraph). */
+export function truncateTitle(text: string, max = 60): string {
+  const collapsed = text.replace(/\s+/g, ' ').trim()
+  if (collapsed.length <= max) return collapsed
+  return `${collapsed.slice(0, max - 1)}…`
 }
 
 /** Cap the detail text shown in a notification. */

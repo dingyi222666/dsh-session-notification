@@ -81,6 +81,7 @@ Preferences are stored **browser-locally** (localStorage) under the `dsh-session
 The browser half watches the sessions list snapshot and each session's conversation snapshot — no polling, no new wire channels:
 
 - A session's `running` edge true→false ends a run; the run is classified **failed** when a new `turn-error` node or a host `agent-error` appeared during it, otherwise **completed** (a failure that a retry recovered reads as completed).
+- A completion raises nothing while the host still has work that will start another turn by itself (a queued follow-up, or a goal round the driver still owes): that idle edge is a pause, and the continuation's own end notifies. A completed or failed notice is titled by the run's latest user message, falling back to the session title.
 - A pending-interaction edge (`question` / `approval`) raises the question / permission kinds, with the question text or the tool name+reason in the notification body.
 - Sessions already idle (or already pending) when the plugin loads raise nothing.
 
@@ -98,6 +99,8 @@ The browser half watches the sessions list snapshot and each session's conversat
 - Browser notifications require permission, and sound playback requires the page to have user activation (the browser's autoplay policy) — both are normal for browser apps and resolve as soon as the user interacts with the GUI.
 - Custom audio files live in the browser (localStorage), so they do not follow you across browsers or profiles.
 - The browser half is event-driven from the sessions list; it does not observe the raw event stream, so a run that starts and finishes between two list snapshots could in principle be missed (the host sends a status flip per edge, so this does not happen in practice).
+- Goal *activation* is process-local and never on the wire: a goal left `active` but disarmed (for example after a restart) reads as a continuation, so its idle edge stays unannounced until the goal changes or is resumed.
+- Background-job rosters are loaded only for the session you are viewing, so a job that finishes and wakes an idle session is invisible to the client at that idle edge; such a wake can still produce an early completion notice.
 
 ## Model Experience
 

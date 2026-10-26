@@ -192,6 +192,22 @@ export function apply(ctx: ClientContext): void {
       }
     },
     titleOf: (id: SessionId) => ctx.sessions.list.getSnapshot().byId[id]?.displayTitle ?? id,
+    // The host will resume this session by itself: a queued follow-up is
+    // claimed as the next turn, and a goal round is queued once the driver sees
+    // idle. The running bit is false in both gaps, so that idle edge is a
+    // pause, not an end. Read from the list snapshot to cover unopened sessions.
+    hasUnfinishedWork: (id) => {
+      // Structural: the `inbox` and `goal` projection wire values, no host imports.
+      const values = ctx.sessions.list.getSnapshot().projectionsBySession[id]?.values as {
+        inbox?: { 'next-turn'?: readonly unknown[], 'next-step'?: readonly unknown[] }
+        goal?: { goal: { phase: string, maxGoalRounds: number }, roundsStarted: number } | null
+      } | undefined
+      const inbox = values?.inbox
+      if ((inbox?.['next-turn']?.length ?? 0) > 0 || (inbox?.['next-step']?.length ?? 0) > 0) return true
+      const goal = values?.goal
+      // A goal that reached its round cap is blocked by the driver, not continued.
+      return goal?.goal.phase === 'active' && goal.roundsStarted < goal.goal.maxGoalRounds
+    },
     settle: () => new Promise(resolve => setTimeout(resolve, SETTLE_MS)),
     // Subagents live in the same sessions list, flagged by their summary
     // origin; the main-only filter silences them.
