@@ -9,7 +9,7 @@ import type { SessionId } from '@deepseek-ai/dsh-client-connection/client'
 // dsh 0.1.3: session-list types live in the api-session-controller client.
 import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import {
-  NotificationEngine, truncateDetail,
+  MAX_SETTLE_ATTEMPTS, NotificationEngine, truncateDetail,
   type NotificationEnginePorts, type NotificationEvent, type PendingFacts, type SessionDetail,
 } from '../src/client/notification-service.ts'
 
@@ -22,7 +22,7 @@ function list(byId: Record<string, ReturnType<typeof summary>>): SessionListStat
 }
 
 function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
-  return { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, finalText: '', ...overrides }
+  return { maxTurnErrorSeq: 0, failureMessage: null, lastAgentError: null, finalText: '', lastUserText: '', ...overrides }
 }
 
 function pending(sessionId: string, kind: PendingFacts['kind'], key = 'k1', text = ''): [SessionId, PendingFacts] {
@@ -346,6 +346,140 @@ describe('NotificationEngine', () => {
     engine.observe(list({ main: summary('main', false) }))
     await flush()
     expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'main', title: 'main', detail: '' }])
+  })
+
+  it('names the run by the latest user message, not the stale session title', async () => {
+    // dsh derives a session title from its FIRST prompt and, under the default
+    // 'first-prompt' provider, never regenerates it (dsh-session-title/lib/
+    // index.js:386 generates only while `count === 1`), so the title names a
+    // subject the user left behind many turns ago.
+    const ports = makePorts({
+      detailOf: () => detail({ finalText: '已补上 3 个用例', lastUserText: '再加个单元测试' }),
+      titleOf: () => '修复登录超时',
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+
+    expect(ports.events).toHaveLength(1)
+    expect(ports.events[0]?.title).toBe('再加个单元测试')
+  })
+
+  it('falls back to the session title when the run carries no user message', async () => {
+    const ports = makePorts({
+      detailOf: () => detail({ lastUserText: '' }),
+      titleOf: () => '会话标题',
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: '会话标题', detail: '' }])
+  })
+
+  it('holds the completion while the session resumes on its own', async () => {
+    // A goal round starts the next turn out of the idle edge
+    // (dsh-goal-round-driver/lib/index.js:213 observes 'idle'), and
+    // 'maintenance' reports 'idle' too (dsh-agent-loop/lib/index.js:790-792),
+    // so one idle edge cannot be trusted to mean the work is over.
+    let running = false
+    const ports = makePorts({
+      detailOf: () => detail({ finalText: 'step done' }),
+      isRunning: () => running,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    running = true
+    await flush()
+    expect(ports.events).toEqual([])
+  })
+
+  it('re-reads running across every settle round before calling a run over', async () => {
+    const rounds: number[] = []
+    const ports = makePorts({
+      detailOf: () => detail(),
+      settle: async (attempt) => { rounds.push(attempt) },
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(rounds).toEqual(Array.from({ length: MAX_SETTLE_ATTEMPTS }, (_, index) => index))
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: '' }])
+  })
+
+  it('stops confirming as soon as a settle round sees the run again', async () => {
+    const rounds: number[] = []
+    const ports = makePorts({
+      detailOf: () => detail(),
+      settle: async (attempt) => { rounds.push(attempt) },
+      // Idle when settling starts, running again by the first re-check.
+      isRunning: () => rounds.length > 0,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    // The first round saw the run back, so the remaining rounds never ran.
+    expect(rounds).toEqual([0])
+    expect(ports.events).toEqual([])
+  })
+
+  it('holds the completion while queued work will start another turn', async () => {
+    // dsh-agent-loop/lib/index.js:88-91 — the inbox projection reports pending
+    // input ('next-turn'/'next-step') that the loop will run after this turn,
+    // and the host running bit is false in the meantime.
+    let queued = true
+    const ports = makePorts({
+      detailOf: () => detail(),
+      hasUnfinishedWork: () => queued,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+    // The queued work drained; the next idle edge is the real end.
+    queued = false
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: '' }])
+  })
+
+  it('never holds a failure behind unfinished work', async () => {
+    let errorSeq = 0
+    const ports = makePorts({
+      detailOf: () => detail({ maxTurnErrorSeq: errorSeq, failureMessage: 'boom' }),
+      hasUnfinishedWork: () => true,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    errorSeq = 1
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    // A failure is actionable now: queued work never defers it.
+    expect(ports.events.map(event => event.kind)).toEqual(['failed'])
+  })
+
+  it('holds a completion that queued work keeps from ending, then releases it', async () => {
+    let queued = true
+    const ports = makePorts({
+      detailOf: () => detail({ finalText: 'done' }),
+      hasUnfinishedWork: () => queued,
+    })
+    const engine = new NotificationEngine(ports)
+    engine.observe(list({ a: summary('a', true) }))
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([])
+    // The queued work drained; the next list change releases the held notice.
+    queued = false
+    engine.observe(list({ a: summary('a', false) }))
+    await flush()
+    expect(ports.events).toEqual([{ kind: 'completed', sessionId: 'a', title: 'a', detail: 'done' }])
   })
 })
 

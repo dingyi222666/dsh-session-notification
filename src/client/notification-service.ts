@@ -65,6 +65,13 @@ export interface SessionDetail {
   lastAgentError: string | null
   /** Text of the last assistant message (the final completion text); '' when none. */
   finalText: string
+  /**
+   * Text of the latest user message (the request this run answered); '' when
+   * the chat view holds none. Session titles come from the first prompt and
+   * never move, so a notification titled with the session title names a
+   * subject the user has long since left behind; this is the fresh subject.
+   */
+  lastUserText: string
 }
 
 /** One classified notification event. */
@@ -89,8 +96,27 @@ export interface NotificationEnginePorts {
   ensureDetail?: (sessionId: SessionId) => Promise<void>
   /** Human display title of one session. */
   titleOf: (sessionId: SessionId) => string
-  /** Wait for trailing wire frames after a running edge (settle window). */
-  settle: () => Promise<void>
+  /**
+   * Wait for trailing wire frames after a running edge (settle window).
+   * @param attempt - zero-based re-check index; the wiring may return early
+   * once the run has demonstrably settled.
+   */
+  settle: (attempt: number) => Promise<void>
+  /**
+   * Whether one session still reports running (re-read after the settle
+   * window). A run that came back is a continuation, not a completion; an
+   * absent reader counts as "not running" (the quiet fallback is to notify).
+   * Optional: absent keeps the historical single-edge behavior.
+   */
+  isRunning?: (sessionId: SessionId) => boolean
+  /**
+   * Whether one session still has unfinished work of its own that will start
+   * another turn without the user: a queued follow-up, an armed goal round, or
+   * a live background job. The host running bit is false in all three, so a
+   * completion notice there announces an end that has not happened. Optional:
+   * absent holds nothing extra.
+   */
+  hasUnfinishedWork?: (sessionId: SessionId) => boolean
   /** Whether one session is a subagent (never the main session). */
   isSubagent: (sessionId: SessionId) => boolean
   /** Whether one session still has a running descendant (recursive). */
@@ -106,19 +132,31 @@ interface RunState {
 }
 
 /**
+ * How many settle rounds one finished run may re-check before its verdict
+ * sticks. Auto-continuation (a goal round, a settled background job, a queued
+ * follow-up) lands within a few seconds of the idle edge, so a single 250 ms
+ * window is far too short to call a run finished.
+ */
+export const MAX_SETTLE_ATTEMPTS = 4
+
+/**
  * Classifies session lifecycle edges into notification events. Running
  * true→false transitions arm a classification (completed vs failed) after the
  * settle window; a pending-interaction arrival raises the question/permission
  * kinds (observed through the uiSession pending map). A session that was
  * already idle when observation started raises nothing.
+ *
+ * A run only counts as finished once the session stayed idle across every
+ * settle round: an idle edge that comes back running is a continuation, and
+ * one that leaves queued work behind will start another turn by itself.
  */
 export class NotificationEngine {
   private readonly prevRunning = new Map<SessionId, boolean>()
   private readonly runs = new Map<SessionId, RunState>()
   private readonly settling = new Set<SessionId>()
   private readonly pendingKeys = new Map<SessionId, string>()
-  /** Completions held back until every descendant subagent has finished. */
-  private readonly heldCompletions = new Map<SessionId, string>()
+  /** Completions held back until the session is genuinely quiet again. */
+  private readonly heldCompletions = new Map<SessionId, { title: string, detail: string }>()
   /** Notification scope. Defaults to the durable default; wiring syncs it. */
   private mode: NotificationMode = 'main-wait'
 
@@ -136,13 +174,30 @@ export class NotificationEngine {
     if (previous === 'main-wait' && mode !== 'main-wait') this.releaseHeld()
   }
 
-  /** Emit every held completion whose descendants have all settled. */
+  /**
+   * Emit every held completion whose session is now genuinely finished
+   * (descendants settled, no run back in flight, no work queued). A held
+   * event waits for a later snapshot to prove that; a run that starts
+   * meanwhile supersedes it in {@link armRun}.
+   */
   private releaseHeld(): void {
-    for (const [id, detail] of [...this.heldCompletions]) {
-      if (this.waitsFor(id)) continue
+    for (const [id, held] of [...this.heldCompletions]) {
+      if (!this.finished(id)) continue
       this.heldCompletions.delete(id)
-      this.ports.emit({ kind: 'completed', sessionId: id, title: this.ports.titleOf(id), detail })
+      this.ports.emit({ kind: 'completed', sessionId: id, title: held.title, detail: held.detail })
     }
+  }
+
+  /**
+   * Whether one session is genuinely finished: no running turn, no running
+   * descendant, and no unfinished work that will start another turn by itself.
+   * Anything else is a pause, and a completion notice there announces an end
+   * the user has not reached — the continuation's own end classifies instead.
+   */
+  private finished(id: SessionId): boolean {
+    if (this.ports.isRunning?.(id) === true) return false
+    if (this.ports.hasUnfinishedWork?.(id) === true) return false
+    return !this.waitsFor(id)
   }
 
   /** Whether one session should stay silent (subagents under a main-only mode). */
@@ -251,16 +306,22 @@ export class NotificationEngine {
     })
   }
 
-  /** Classify a finished run after the settle window (completed vs failed). */
+  /** Classify a finished run after the settle rounds (completed vs failed). */
   private async settleRun(id: SessionId): Promise<void> {
     const run = this.runs.get(id)
     if (run === undefined || this.settling.has(id)) return
     this.runs.delete(id)
     this.settling.add(id)
     try {
-      await this.ports.settle()
-      // A newer run armed while settling will classify itself; skip the stale one.
-      if (this.runs.has(id)) return
+      for (let attempt = 0; attempt < MAX_SETTLE_ATTEMPTS; attempt += 1) {
+        await this.ports.settle(attempt)
+        // A newer run armed while settling will classify itself; skip the stale one.
+        if (this.runs.has(id)) return
+        // An idle edge that came back is a continuation — a goal round, a
+        // settled background job, a queued follow-up waking a new turn — not a
+        // finished run. Stop confirming: the verdict below holds it.
+        if (this.ports.isRunning?.(id) === true) break
+      }
       // The filter may have changed while settling (e.g. main-only re-enabled):
       // never emit for a session that is now silenced.
       if (this.silenced(id)) {
@@ -285,19 +346,34 @@ export class NotificationEngine {
       if (failed) {
         // A failure is actionable now: never hold it behind subagents.
         this.heldCompletions.delete(id)
-        this.ports.emit({ kind: 'failed', sessionId: id, title: this.ports.titleOf(id), detail: message })
+        this.ports.emit({ kind: 'failed', sessionId: id, title: this.label(id, detail), detail: message })
         return
       }
-      // Hold the completion while descendants still run: the session only
-      // paused between subagent waves, so alert when the whole fan-out ends.
-      if (this.waitsFor(id)) {
-        this.heldCompletions.set(id, message)
+      // Not finished: descendants still run, or the session will start another
+      // turn on its own (a queued follow-up, an armed goal round, a live job).
+      // Hold the notice and release it once a later snapshot proves the whole
+      // thing ended — a continuation supersedes it in `armRun` instead.
+      if (!this.finished(id)) {
+        this.heldCompletions.set(id, { title: this.label(id, detail), detail: message })
         return
       }
-      this.ports.emit({ kind: 'completed', sessionId: id, title: this.ports.titleOf(id), detail: message })
+      this.ports.emit({ kind: 'completed', sessionId: id, title: this.label(id, detail), detail: message })
     } finally {
       this.settling.delete(id)
     }
+  }
+
+  /**
+   * The freshest subject an event can name: the latest user message (what the
+   * run was actually about), falling back to the session title when the chat
+   * view holds no user message. Session titles come from the first prompt and
+   * never move, so they name a subject long left behind.
+   */
+  private label(id: SessionId, detail?: SessionDetail): string {
+    const read = detail ?? this.ports.detailOf(id)
+    const text = read?.lastUserText?.trim() ?? ''
+    if (text.length > 0) return truncateTitle(text)
+    return this.ports.titleOf(id)
   }
 
   /** Raise the question/permission kind on a pending-interaction arrival. */
@@ -307,7 +383,7 @@ export class NotificationEngine {
       // the 'permission' kind (and 'question'/'plan-review' into 'question').
       kind: kind === 'approval' ? 'permission' : 'question',
       sessionId: id,
-      title: this.ports.titleOf(id),
+      title: this.label(id),
       detail,
     })
   }
@@ -317,7 +393,9 @@ export class NotificationEngine {
  * Project one session's lifecycle + chat snapshots into the engine's
  * {@link SessionDetail}. The final completion text is the joined text of the
  * last assistant step (the chat view's `assistant-step` node) that carries
- * any; failure classification reads the chat view's turn-error nodes plus the
+ * any; the notification subject is the latest `user` node's text, which names
+ * the request the run answered instead of the long-stale session title.
+ * Failure classification reads the chat view's turn-error nodes plus the
  * session's host agent-error. An absent chat target (session not opened)
  * yields no turn-error or final-text facts, never a throw.
  * @param session - the session lifecycle snapshot (session-controller).
@@ -331,6 +409,8 @@ export function sessionDetailOf(
   let maxTurnErrorSeq = 0
   let failureMessage: string | null = null
   let finalText = ''
+  let lastUserText = ''
+  let lastUserSeq = -1
   if (chat !== undefined) {
     for (const node of chat.nodes.values()) {
       if (node.kind === 'turn-error') {
@@ -346,6 +426,12 @@ export function sessionDetailOf(
           .map(block => block.text)
           .join('')
         if (text.length > 0) finalText = text
+      } else if (node.kind === 'user') {
+        const data = node.data as { seq: number, content: readonly ContentBlockLike[] }
+        if (data.seq > lastUserSeq) {
+          lastUserSeq = data.seq
+          lastUserText = userTextOf(data.content)
+        }
       }
     }
   }
@@ -354,7 +440,29 @@ export function sessionDetailOf(
     failureMessage,
     lastAgentError: session.lastAgentError,
     finalText,
+    lastUserText,
   }
+}
+
+/** Minimal structural view of one user-message content block. */
+interface ContentBlockLike {
+  type: string
+  text?: string
+}
+
+/** Join the text blocks of one user message (attachments and images carry no text). */
+function userTextOf(content: readonly ContentBlockLike[]): string {
+  return content
+    .filter(block => block.type === 'text' && typeof block.text === 'string')
+    .map(block => block.text as string)
+    .join('')
+}
+
+/** Cap the notification subject (a user message can be a whole paragraph). */
+export function truncateTitle(text: string, max = 60): string {
+  const collapsed = text.replace(/\s+/g, ' ').trim()
+  if (collapsed.length <= max) return collapsed
+  return `${collapsed.slice(0, max - 1)}…`
 }
 
 /** Cap the detail text shown in a notification. */
