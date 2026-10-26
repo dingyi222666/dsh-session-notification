@@ -78,41 +78,13 @@ declare module '@deepseek-ai/dsh-api-session-controller/client' {
 /** Dictionary namespace owned by this plugin. */
 const NS = 'notifications'
 
-/**
- * How long a finished run waits for trailing wire frames before each
- * confirmation round. The first round is the historical 250 ms (enough for
- * wire frames); later rounds are spaced out to catch auto-continuation,
- * which arrives within a few seconds of the idle edge.
- */
+/** How long a finished run waits for trailing wire frames before classification. */
 const SETTLE_MS = 250
-
-/** Multiplier between confirmation rounds: 0.25s, 0.75s, 1.75s, 3.75s. */
-const SETTLE_BACKOFF = 2
 
 /** Required services: the slot registry, dictionaries, the session list, the
  *  alpha chat view (uiConversation), and the pending-interaction map
  *  (uiSession). */
 export const inject = ['slots', 'locale', 'sessions', 'uiConversation', 'uiSession', 'uiWorkspace']
-
-/**
- * Minimal structural view of the goal projection (avoids a host-package
- * import). The wire view is `state.current`, i.e. `{ goal, roundsStarted,
- * createdAt, updatedAt }`, and the goal it carries is the durable snapshot —
- * `id`, `revision`, `objective`, `phase`, `blockedReason`, `maxGoalRounds`.
- * Goal *activation* is process-local and deliberately absent from the
- * projection (`dsh-goal/lib/index.js` foldGoal: "a fresh durable projection;
- * activation is deliberately absent"), so only the phase is readable here.
- */
-interface GoalProjectionLike {
-  goal: { phase: 'active' | 'paused' | 'blocked' | 'complete' }
-}
-
-/** Minimal structural view of the client jobs service's row state. */
-interface JobsRowsLike {
-  state: {
-    getSnapshot(): { rows: Record<string, readonly { status: string }[] | undefined> }
-  }
-}
 
 /**
  * Client plugin body: bind the browser-local preferences scope, register the
@@ -220,61 +192,23 @@ export function apply(ctx: ClientContext): void {
       }
     },
     titleOf: (id: SessionId) => ctx.sessions.list.getSnapshot().byId[id]?.displayTitle ?? id,
-    // Later rounds wait longer: the first covers trailing wire frames, the rest
-    // span the few seconds in which an auto-continuation starts its next turn.
-    settle: attempt => new Promise(resolve => setTimeout(resolve, SETTLE_MS * SETTLE_BACKOFF ** attempt)),
-    // The session's own running bit, read fresh (the list snapshot lags a wire
-    // frame behind). A run that came back is a continuation, not a completion.
-    isRunning: (id) => {
-      try {
-        return ctx.sessions.binding(id)?.session.getSnapshot().running === true
-      } catch {
-        return false
-      }
-    },
-    // Work that will start another turn without the user. The host running bit
-    // is false for all of it, so a completion notice there announces an end
-    // that has not happened: a queued follow-up (inbox next-turn), an active
-    // goal whose next round the driver queues on idle, or a live background
-    // job owned by this session.
+    // The host will resume this session by itself: a queued follow-up is
+    // claimed as the next turn, and a goal round is queued once the driver sees
+    // idle. The running bit is false in both gaps, so that idle edge is a
+    // pause, not an end. Read from the list snapshot to cover unopened sessions.
     hasUnfinishedWork: (id) => {
-      const binding = (() => {
-        try {
-          return ctx.sessions.binding(id)
-        } catch {
-          return undefined
-        }
-      })()
-      if (binding === undefined) return false
-      // The projections face reads the same values the list row carries, but
-      // key by key and without the list frame's lag.
-      const projection = (key: string): unknown => {
-        try {
-          return binding.session.projections.faceOf(key).getSnapshot()
-        } catch {
-          return undefined
-        }
-      }
-      const inbox = projection('inbox') as { 'next-turn'?: readonly unknown[] } | undefined
-      if ((inbox?.['next-turn']?.length ?? 0) > 0) return true
-      // An `active` goal is unfinished by definition: the round driver queues
-      // the next round when it observes `idle`, so the notice there announces
-      // an end the user has not reached. Activation is not on the wire (it is
-      // process-local), so it cannot be consulted; an active goal that a
-      // restart left disarmed is held conservatively rather than risk a false
-      // completion, and holds are re-checked on every list snapshot.
-      const goal = projection('goal') as GoalProjectionLike | null | undefined
-      if (goal?.goal.phase === 'active') return true
-      // Background jobs are reported through the jobs service when the shell
-      // provides one; rows are keyed by owner session id.
-      try {
-        const jobs = ctx.get('jobs') as JobsRowsLike | undefined
-        const rows = jobs?.state.getSnapshot().rows[id]
-        return rows?.some(row => row.status === 'running' || row.status === 'stopping') === true
-      } catch {
-        return false
-      }
+      // Structural: the `inbox` and `goal` projection wire values, no host imports.
+      const values = ctx.sessions.list.getSnapshot().projectionsBySession[id]?.values as {
+        inbox?: { 'next-turn'?: readonly unknown[], 'next-step'?: readonly unknown[] }
+        goal?: { goal: { phase: string, maxGoalRounds: number }, roundsStarted: number } | null
+      } | undefined
+      const inbox = values?.inbox
+      if ((inbox?.['next-turn']?.length ?? 0) > 0 || (inbox?.['next-step']?.length ?? 0) > 0) return true
+      const goal = values?.goal
+      // A goal that reached its round cap is blocked by the driver, not continued.
+      return goal?.goal.phase === 'active' && goal.roundsStarted < goal.goal.maxGoalRounds
     },
+    settle: () => new Promise(resolve => setTimeout(resolve, SETTLE_MS)),
     // Subagents live in the same sessions list, flagged by their summary
     // origin; the main-only filter silences them.
     isSubagent: (id: SessionId) =>
