@@ -80,8 +80,10 @@ Preferences are stored **browser-locally** (localStorage) under the `dsh-session
 
 The browser half watches the sessions list snapshot and each session's conversation snapshot — no polling, no new wire channels:
 
-- A session's `running` edge true→false ends a run; the run is classified **failed** when a new `turn-error` node or a host `agent-error` appeared during it, otherwise **completed** (a failure that a retry recovered reads as completed).
-- A pending-interaction edge (`question` / `approval`) raises the question / permission kinds, with the question text or the tool name+reason in the notification body.
+- A session's `running` edge true→false arms a run; the run is classified **failed** when a new `turn-error` node or a host `agent-error` appeared during it, otherwise **completed** (a failure that a retry recovered reads as completed).
+- An idle edge is only a *candidate* end. The engine re-reads `running` over four settle rounds (0.25 s / 0.75 s / 1.75 s / 3.75 s): a run that comes back is a continuation, and an end that leaves queued work behind (`inbox` `next-turn`, an **armed** `active` goal, a live background job) is held until a later snapshot proves the whole thing finished. `maintenance` phases and the gap before a goal round both report `idle` while work continues, so a single edge cannot be trusted.
+- A notice's `{title}` is the **latest user message** of the run, not the session title: dsh derives session titles from the first prompt and, under the default `first-prompt` provider, never regenerates them, so the title names a subject the user left behind long ago. The session title stays as the fallback when the conversation snapshot holds no user message.
+- A pending-interaction edge (`question` / `approval`) raises the question / permission kinds, with the question text or the tool name+reason in the notification body, titled the same way.
 - Sessions already idle (or already pending) when the plugin loads raise nothing.
 
 ## Development
