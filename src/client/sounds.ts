@@ -204,6 +204,11 @@ export class SoundPlayer {
       return
     }
     this.releaseCustomSource()
+    // The element feeds the shared gain node, which only `play()` updates;
+    // without this the slider keeps the value the last built-in sound left
+    // behind (issue #11). Set it at currentTime — the custom element starts
+    // immediately, unlike the scheduled built-in patterns.
+    this.master.gain.setValueAtTime(clampVolume(this.volume()), context.currentTime)
     const audio = new Audio(dataUrl)
     this.customAudio = audio
     try {

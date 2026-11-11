@@ -234,6 +234,29 @@ describe('SoundPlayer idle suspend (issue #6)', () => {
     expect(FakeAudioContext.instances).toHaveLength(0)
   })
 
+  /* Regression for issue #11: `playCustom` routes the element through the
+   * shared master gain but never set it, so the custom sound played at the
+   * gain the last built-in play left behind (full volume on the first play). */
+  it('applies the master volume to custom audio through the shared gain', () => {
+    const player = new SoundPlayer(() => 0.2)
+    player.playCustom('data:audio/wav;base64,AAA')
+    const context = FakeAudioContext.instances[0]
+    const master = context.createGain.mock.results[0]?.value as FakeGain
+    expect(master.gain.setValueAtTime).toHaveBeenCalledWith(0.2, context.currentTime)
+  })
+
+  it('replaces a stale master gain left by a previous built-in play', () => {
+    let volume = 0.9
+    const player = new SoundPlayer(() => volume)
+    player.play('chime')
+    volume = 0.2
+    player.playCustom('data:audio/wav;base64,AAA')
+    const context = FakeAudioContext.instances[0]
+    const master = context.createGain.mock.results[0]?.value as FakeGain
+    const calls = master.gain.setValueAtTime.mock.calls
+    expect(calls[calls.length - 1]).toEqual([0.2, context.currentTime])
+  })
+
   it('dispose closes the context and cancels a pending suspend', () => {
     const player = new SoundPlayer(() => 0.6)
     player.play('chime')

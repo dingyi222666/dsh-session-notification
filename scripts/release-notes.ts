@@ -196,6 +196,13 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
     ],
     fixes: [],
   },
+  '0.2.8': {
+    features: [],
+    fixes: [
+      '- **音量滑块对自定义音频生效(#11,贡献者 @weissfl)**: 自定义音频经 `MediaElementSource` 接入共享增益链后,`master.gain` 只在内置音效 `play()` 时更新,导致自定义音效始终以上一次内置播放遗留的增益发声(首次播放即 100%);现在 `playCustom` 在接入后立即把 clamp 后的当前音量写入共享 gain,滑块对自定义文件与内置音效一致缩放;新增两条回归测试(写共享 gain、覆盖上一次 `play()` 留下的旧值)',
+      '- **依赖升级至 0.2.2-rc.1**: @deepseek-ai/dsh-* 升到 ^0.2.2-rc.1,cordis ^4.1.0 / schemastery ^3.19.0;rc.2→rc.1 消费面逐项核对后无需改动——`SessionListEntry.projectionValues` 收窄为 `SessionProjectionSummaryValues`(仅会话行摘要投影,插件不读该字段),`projectionsBySession` 改为 `SessionProjectionViewValues`(仅剥掉 summary 标记,值与键集不变)且仍由全会话广播的 control frame + 逐会话投影读填充,`inbox`/`goal` 投影未标记 `summary: false`,未打开会话的完成判定信号依旧可达;`ChatNode` 的 `kind: "user"` / `source`、`sessionStatus.pendingInteraction`、`uiWorkspace.openSession`、`ConfigFormSnapshot` 与五个 OutlineRegular 图标全部保持;typecheck/143 specs/build 全绿',
+    ],
+  },
   '0.2.7': {
     features: [],
     fixes: [
