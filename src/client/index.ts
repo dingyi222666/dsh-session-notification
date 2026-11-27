@@ -36,9 +36,13 @@ import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+// dsh 0.2.3 moved the Session status table out of ui-session into its own
+// package/service (`uiSession.sessionStatus`), so both the type and the
+// service now come from dsh-client-ui-session-status.
+import type {} from '@deepseek-ai/dsh-client-ui-session-status/client'
 import type {
   SessionStatusSnapshot,
-} from '@deepseek-ai/dsh-client-ui-session/client'
+} from '@deepseek-ai/dsh-client-ui-session-status/client'
 // Type-only: the workspace navigation merge (ctx.uiWorkspace). Injected
 // optionally so a composition without it keeps the plugin running.
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
@@ -53,7 +57,7 @@ import {
 import { MAX_CUSTOM_AUDIO_BYTES, readCustomSound, readFileAsDataUrl, writeCustomSound } from './custom-audio.ts'
 import {
   NotificationDispatcher, NotificationEngine, sessionDetailOf,
-  type ChatSnapshotLike, type PendingFacts,
+  type ChatSnapshotLike, type PendingFacts, type SessionDetail,
 } from './notification-service.ts'
 import { createNotificationsStore } from './settings-store.ts'
 import {
@@ -82,9 +86,12 @@ const NS = 'notifications'
 const SETTLE_MS = 250
 
 /** Required services: the slot registry, dictionaries, the session list, the
- *  alpha chat view (uiConversation), and the pending-interaction map
- *  (uiSession). */
-export const inject = ['slots', 'locale', 'sessions', 'uiConversation', 'uiSession', 'uiWorkspace']
+ *  alpha chat view (uiConversation), and the Session status table
+ *  (`uiSession.sessionStatus`, its own service since dsh 0.2.3 and the source
+ *  of the question/approval edges). */
+export const inject = [
+  'slots', 'locale', 'sessions', 'uiConversation', 'uiSession', 'uiSession.sessionStatus', 'uiWorkspace',
+]
 
 /**
  * Client plugin body: bind the browser-local preferences scope, register the
@@ -151,44 +158,58 @@ export function apply(ctx: ClientContext): void {
     hasFocus: () => typeof document === 'undefined' || document.hasFocus(),
   })
 
-  const engine = new NotificationEngine({
-    detailOf: (id: SessionId) => {
-      const binding = ctx.sessions.binding(id)
-      if (binding === undefined) return undefined
-      // The session snapshot carries no chat view: the conversation nodes
-      // live in the uiConversation chat target, materialized only for opened
-      // sessions. Absent it, classification still has lastAgentError.
-      // (The chat target key and the session snapshot shape are surfaced
-      // through their owning packages' type merges; the structural casts keep
-      // this plugin independent of those augmentation orders.) A generation
-      // that ends between the running edge and this read makes the binding
-      // calls throw in 0.1.7, so a failed read degrades to "no detail".
-      try {
-        const conversation = ctx.uiConversation.binding(binding) as unknown as {
-          activate(target: string): void
-          target(key: string): { getSnapshot(): unknown }
-        }
-        // Reading a target source does not activate it in 0.1.7+; without
-        // activation the chat nodes this classification needs stay absent for
-        // every session the shell has not selected.
-        conversation.activate('chat')
-        const chat = conversation.target('chat').getSnapshot() as ChatSnapshotLike | undefined
-        const session = binding.session.getSnapshot() as unknown as SessionSnapshot
-        return sessionDetailOf(session, chat)
-      } catch {
-        return undefined
+  /**
+   * Read one session's classification inputs from its current binding.
+   * The session snapshot carries no chat view: the conversation nodes live in
+   * the uiConversation chat target, materialized only while a reference
+   * retains the `conversation` facet (see `detailWithin`). Absent it,
+   * classification still has `lastAgentError`. The structural casts keep this
+   * plugin independent of the owning packages' type merge order, and a
+   * generation that ends mid-read degrades to "no detail".
+   * @param id - session to read.
+   * @returns the detail snapshot, or undefined when nothing is bound.
+   */
+  const readDetail = (id: SessionId): SessionDetail | undefined => {
+    const binding = ctx.sessions.binding(id)
+    if (binding === undefined) return undefined
+    try {
+      const conversation = ctx.uiConversation.binding(binding) as unknown as {
+        activate(target: string): void
+        target(key: string): { getSnapshot(): unknown }
       }
-    },
-    // Open a session the UI never opened so its chat view can assemble the
-    // final assistant text; skipped when no alert could use it.
-    ensureDetail: async (id) => {
+      // Reading a target source does not activate it; without activation the
+      // chat nodes this classification needs stay absent for every session
+      // the shell has not selected.
+      conversation.activate('chat')
+      const chat = conversation.target('chat').getSnapshot() as ChatSnapshotLike | undefined
+      const session = binding.session.getSnapshot() as unknown as SessionSnapshot
+      return sessionDetailOf(session, chat)
+    } catch {
+      return undefined
+    }
+  }
+
+  const engine = new NotificationEngine({
+    detailOf: (id: SessionId) => readDetail(id),
+    // Open a session the UI never opened and read its detail while the
+    // `conversation` retain facet is held. dsh 0.2.3 folds a session's event
+    // window only while some reference retains that facet and publishes the
+    // empty result once the last one is released, so the read has to happen
+    // inside the callback instead of after it. Skipped when no alert could
+    // use the detail.
+    detailWithin: async (id) => {
       const settings = currentSettings()
-      if (!settings.browserEnabled && !settings.soundEnabled) return
-      if (!Object.values(settings.types).some(type => type.enabled)) return
+      if (!settings.browserEnabled && !settings.soundEnabled) return readDetail(id)
+      if (!Object.values(settings.types).some(type => type.enabled)) return readDetail(id)
       try {
-        await ctx.sessions.using(id, { source: 'sessionNotification' }, async () => {})
+        return await ctx.sessions.using(
+          id,
+          { source: 'sessionNotification', facets: { conversation: true } },
+          async () => readDetail(id),
+        )
       } catch (error) {
         console.warn('[dsh-session-notification] could not load the notification session', id, error)
+        return readDetail(id)
       }
     },
     titleOf: (id: SessionId) => ctx.sessions.list.getSnapshot().byId[id]?.displayTitle ?? id,
@@ -252,10 +273,10 @@ export function apply(ctx: ClientContext): void {
     return unsubscribe
   }, 'dsh-session-notification: session watch')
 
-  // dsh 0.1.7 unified the pending-interaction map into the uiSession session
-  // status source (running + pendingInteraction + completionUnread per
-  // session): observe its pendingInteraction values for question/approval
-  // edges.
+  // The pending-interaction map and the running bit live in the Session status
+  // table (running + pendingInteraction + completionUnread per session),
+  // provided as its own `uiSession.sessionStatus` service since dsh 0.2.3:
+  // observe its pendingInteraction values for question/approval edges.
   const pendingFactsOf = (statuses: SessionStatusSnapshot): Map<SessionId, PendingFacts> => {
     const out = new Map<SessionId, PendingFacts>()
     for (const [id, status] of statuses) {

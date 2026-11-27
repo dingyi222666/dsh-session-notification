@@ -196,6 +196,14 @@ export const RELEASE_NOTES: Record<string, ReleaseNotes> = {
     ],
     fixes: [],
   },
+  '0.2.9': {
+    features: [],
+    fixes: [
+      '- **适配 dsh 0.2.3：客户端半区重新激活(#13,贡献者 @liam-hyl)**: 0.2.3 把会话状态表从 `uiSession` 拆成独立服务 `uiSession.sessionStatus`(由 `@deepseek-ai/dsh-client-ui-session-status` 提供),而插件仍只声明 `uiSession`,读该属性时抛 `cannot get property "uiSession.sessionStatus" without inject`,整个客户端半区挂载失败——设置里没有「通知」分区,页面提示「本页面的插件未能完成同步」;现在 `inject` 显式声明该服务,状态表的类型(`SessionStatusSnapshot`)与类型合并也改从新包导入。Cordis 会等待注入的服务出现,因此最低支持版本上调到 dsh 0.2.3(README 已写明)',
+      '- **完成/失败判定在 0.2.3 的 `conversation` facet 下继续可见**: 0.2.3 让会话对话装配只在有引用持有 `conversation` retain facet 时才跟随事件窗口(最后一个持有者释放后立即丢弃折叠并发布空结果),而本插件此前用 `sessions.using(id, { source })` 打开未打开的会话却没请求该 facet,chat 快照恒为空——#9 修好的「标题取最后一条用户消息」与失败判定都会退化。现在改为在持有 `facets: { conversation: true }` 期间完成读取(新端口 `detailWithin`),释放后再读不会发生;读取失败仍回落到无对话快照的判定',
+      '- **依赖升级至 0.2.3-alpha.2**: @deepseek-ai/dsh-* 升到 ^0.2.3-alpha.2,cordis ~4.2.0-alpha.1 / schemastery ^3.20.0-alpha.1,并在包的 `dsh.client.inject` 里登记 `@deepseek-ai/dsh-client-ui-session-status`(与官方 ui-workspace / ui-conversation 的声明方式一致);rc.5→0.2.3-alpha.2 的消费面逐项核对:会话状态表迁出、`pendingInteractions` 移到 `uiSession` 自身、sessions 的 retain 增加 facet 维度、ui-conversation 的 `apply` 改收 `SyncedConfig`、settings 分区的 `close` 成为 owner props——本插件只读取 `uiSession.sessionStatus` 的 `pendingInteraction`/`running` 边沿与 `sessions.list` / `uiConversation` 的既有面,其余不受影响;typecheck/143 specs/build 全绿',
+    ],
+  },
   '0.2.8': {
     features: [],
     fixes: [

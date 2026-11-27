@@ -84,11 +84,14 @@ export interface NotificationEnginePorts {
   /** Read one session's detail snapshot; undefined when unavailable. */
   detailOf: (sessionId: SessionId) => SessionDetail | undefined
   /**
-   * Materialize the detail inputs before the settle read (open a session the
-   * UI never opened so its chat view can assemble the final assistant text).
-   * Optional and best-effort: a failure must not lose the classification.
+   * Read one session's detail while keeping the inputs materialized. The
+   * browser wiring opens a session the UI never opened and holds the
+   * `conversation` retain facet across the read: dsh 0.2.3 folds a session's
+   * event window only while some reference retains that facet, so a read taken
+   * after the reference is released sees an empty chat. Optional and
+   * best-effort: a failure must not lose the classification.
    */
-  ensureDetail?: (sessionId: SessionId) => Promise<void>
+  detailWithin?: (sessionId: SessionId) => Promise<SessionDetail | undefined>
   /** Human display title of one session. */
   titleOf: (sessionId: SessionId) => string
   /** Wait for trailing wire frames after a running edge (settle window). */
@@ -281,13 +284,18 @@ export class NotificationEngine {
         return
       }
       // A session the user never opened has no loaded history, so its chat
-      // view holds no nodes yet; materialize it best-effort before reading.
+      // view holds no nodes yet; the retained read materializes it
+      // best-effort. The fold lands only while the retention is held, so the
+      // read has to happen inside the callback rather than after it.
+      let detail: SessionDetail | undefined
       try {
-        await this.ports.ensureDetail?.(id)
+        detail = this.ports.detailWithin === undefined
+          ? this.ports.detailOf(id)
+          : await this.ports.detailWithin(id)
       } catch {
         // Best effort only: classify from whatever snapshot reads exist.
+        detail = this.ports.detailOf(id)
       }
-      const detail = this.ports.detailOf(id)
       const failed = detail !== undefined && (
         detail.maxTurnErrorSeq > run.baselineErrorSeq ||
         (detail.lastAgentError !== null && detail.lastAgentError !== run.baselineAgentError)
